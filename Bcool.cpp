@@ -4,6 +4,7 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+#include <chrono>
 #include <stdlib.h>
 
 
@@ -14,6 +15,7 @@
 
 
 using namespace std;
+using namespace chrono;
 
 
 
@@ -22,8 +24,9 @@ void help(){
 	<<"Options and default values: "<<endl
 	<<"-u for read file"<<endl
 	<<"-o for working folder (.)"<<endl
-	<<"-k for  kmer size (31)"<<endl
+	<<"-k for  kmer size (51)"<<endl
 	<<"-s for kmer solidity threshold (2)"<<endl
+	<<"-l tipping length (100)"<<endl
 	<<"-t for core used (max)"<<endl
 	;
 }
@@ -36,12 +39,12 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 	string unPairedFile(""),workingFolder("."),prefixCommand(""),folderStr(STR(folder)),bgreatArg,bloocooArg,slowParameter("-slow");
-	uint k(31),solidity(2),coreUsed(0),correctionStep(1);
+	uint k(51),solidity(2),coreUsed(0),correctionStep(1),tipLength(100);
 	if(folderStr!=""){
 		prefixCommand=folderStr+"/";
 	}
 	char c;
-	while ((c = getopt (argc, argv, "u:x:o:s:k:p:c:t:S:")) != -1){
+	while ((c = getopt (argc, argv, "u:x:o:s:k:p:c:t:S:l:")) != -1){
 	switch(c){
 		case 'u':
 			unPairedFile=realpath(optarg,NULL);
@@ -54,6 +57,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'k':
 			k=stoi(optarg);
+			break;
+		case 'l':
+			tipLength=stoi(optarg);
 			break;
 		case 't':
 			coreUsed=stoi(optarg);
@@ -70,15 +76,13 @@ int main(int argc, char *argv[]) {
 	ofstream param("ParametersUsed.txt");
 	ofstream bankBcalm("bankBcalm.txt");
 	param<<"k: "<<k<<" solidity: "<<solidity<<endl;
-	uint filesCase(0);
 	bloocooArg=unPairedFile;
 	bgreatArg=" -u reads_corrected.fa ";
 	bankBcalm<<"reads_corrected.fa"<<endl;
-	cout<<filesCase<<endl;
-
+	auto start=system_clock::now();
 
 	//CORRECTION
-	cout<<"Reads Correction"<<endl;
+	cout<<"Reads pre-Correction"<<endl;
 	string fileToCorrect(unPairedFile);
 	vector<string> kmerSizeCorrection={"31","63","95","127"};
 	vector<string> bloocooversion={"32","64","128","128"};
@@ -99,7 +103,7 @@ int main(int argc, char *argv[]) {
 	//GRAPH CONSTRUCTION
 	string fileBcalm("bankBcalm.txt"),kmerSize(to_string(k));
 	cout<<"Graph construction "<<endl;
-	string kmerSizeTip((to_string(100)));
+	string kmerSizeTip((to_string(tipLength)));
 	c=system((prefixCommand+"bcalm -in "+fileBcalm+" -kmer-size "+kmerSize+" -abundance-min "+to_string(solidity)+" -out out  -nb-cores "+to_string(coreUsed)+"  >>logs/logBcalm 2>>logs/logBcalm").c_str());
 	//~ c=system((prefixCommand+ "h5dump -y -d histogram/histogram  out.h5  > logs/histodbg"+(kmerSize)).c_str());
 	c=system((prefixCommand+"kMILL out.unitigs.fa $(("+kmerSize+"-1)) $(("+kmerSize+"-2)) >>logs/logBcalm 2>>logs/logBcalm").c_str());
@@ -108,9 +112,13 @@ int main(int argc, char *argv[]) {
 	c=system(("mv out_tiped.fa.fa dbg.fa"));
 	//GRAPH MAPPING
 	cout<<"Read mapping on the graph "<<endl;
-	c=system((prefixCommand+"bgreat -k "+kmerSize+" "+bgreatArg+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +"  -m 5 -e 2 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
+	c=system((prefixCommand+"bgreat -k "+to_string(k)+" "+bgreatArg+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readCooled.fa  -m 10 -e 10 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
+	//~ c=system((prefixCommand+"bgreat -k "+kmerSize+" -u  "+unPairedFile+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readCooled.fa  -m 5 -e 2 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
 
-
+	c=system(("rm *.h5 bankBcalm.txt  out_out.unitigs.fa.fa  out.unitigs.fa tiped.fa"));
+	auto end=system_clock::now();
+    auto waitedFor=end-start;
+    cout<<"Waited for "<<duration_cast<seconds>(waitedFor).count()<<" seconds"<<endl;
 	cout<<"The end"<<endl;
     return 0;
 }
