@@ -16,7 +16,10 @@ echo "-t to use multiple thread for compilation (default 8)"
 
 
 threadNumber=8
-folder=""
+SCRIPT=$(readlink -f $0)
+# Absolute path this script is in. /home/user/bin
+folder=`dirname $SCRIPT`
+folder+="/bin"
 
 
 while getopts "hf:t:" opt; do
@@ -52,6 +55,7 @@ if [ -z "$folder"  ]; then
 
 
 mkdir $folder;
+echo "I put binaries in $folder"
 
 
 

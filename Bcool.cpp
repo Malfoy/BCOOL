@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 	string unPairedFile(""),workingFolder("."),prefixCommand(""),folderStr(STR(folder)),bgreatArg,bloocooArg,slowParameter("-slow");
-	uint k(51),solidity(2),coreUsed(0),correctionStep(1),tipLength(100);
+	uint k(51),solidity(2),coreUsed(0),correctionStep(0),tipLength(100);
 	if(folderStr!=""){
 		prefixCommand=folderStr+"/";
 	}
@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
 	c=system(("mv out_tiped.fa.fa dbg.fa"));
 	//GRAPH MAPPING
 	cout<<"Read mapping on the graph "<<endl;
-	c=system((prefixCommand+"bgreat -k "+to_string(k)+" "+bgreatArg+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readCooled.fa  -m 10 -e 10 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
+	c=system((prefixCommand+"bgreat -k "+to_string(k)+"  "+bgreatArg+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readCooled.fa  -m 10 -e 100 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
 	//~ c=system((prefixCommand+"bgreat -k "+kmerSize+" -u  "+unPairedFile+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readCooled.fa  -m 5 -e 2 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
 
 	c=system(("rm *.h5 bankBcalm.txt  out_out.unitigs.fa.fa  out.unitigs.fa tiped.fa"));
