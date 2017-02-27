@@ -28,6 +28,7 @@ void help(){
 	<<"-s for kmer solidity threshold (2)"<<endl
 	<<"-l tipping length (100)"<<endl
 	<<"-t for core used (max)"<<endl
+	<<"-c for correction step (1)"<<endl
 	;
 }
 
@@ -39,7 +40,7 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 	string unPairedFile(""),workingFolder("."),prefixCommand(""),folderStr(STR(folder)),bgreatArg,bloocooArg,slowParameter("-slow");
-	uint k(51),solidity(2),coreUsed(0),correctionStep(0),tipLength(100);
+	uint k(51),solidity(2),coreUsed(0),correctionStep(1),tipLength(100);
 	if(folderStr!=""){
 		prefixCommand=folderStr+"/";
 	}
@@ -63,6 +64,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 't':
 			coreUsed=stoi(optarg);
+			break;
+		case 'c':
+			correctionStep=stoi(optarg);
 			break;
 		}
 	}
