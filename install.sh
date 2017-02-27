@@ -14,6 +14,8 @@ echo "-t to use multiple thread for compilation (default 8)"
 }
 
 
+cd src;
+
 
 threadNumber=8
 SCRIPT=$(readlink -f $0)
@@ -60,7 +62,7 @@ echo "I put binaries in $folder"
 
 
 make LOL=-Dfolder=$folder -j $threadNumber >>logCompile 2>>logCompile;
-cp bcool $folder;
+cp bcool ..;
 echo PHASE ZERO LAUNCHER: BCOOL;
 
 
