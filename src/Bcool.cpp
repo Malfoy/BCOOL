@@ -86,6 +86,7 @@ int main(int argc, char *argv[]) {
 	auto start=system_clock::now();
 
 	//CORRECTION
+	auto point1=system_clock::now();
 	cout<<"Reads pre-Correction"<<endl;
 	string fileToCorrect(unPairedFile);
 	vector<string> kmerSizeCorrection={"31","63","95","127"};
@@ -103,8 +104,9 @@ int main(int argc, char *argv[]) {
 		c=system(("mv "+bloocooArg+" reads_corrected.fa").c_str());
 	}
 
-
 	//GRAPH CONSTRUCTION
+	auto point2=system_clock::now();
+	cout<<"Pre-Correction took "<<duration_cast<seconds>(point2-point1).count()<<" seconds"<<endl;
 	string fileBcalm("bankBcalm.txt"),kmerSize(to_string(k));
 	cout<<"Graph construction "<<endl;
 	string kmerSizeTip((to_string(tipLength)));
@@ -114,15 +116,19 @@ int main(int argc, char *argv[]) {
 	c=system((prefixCommand+"tipCleaner out_out.unitigs.fa.fa $(("+kmerSize+"-1)) "+kmerSizeTip+" >>logs/logTip 2>>logs/logTip").c_str());
 	c=system((prefixCommand+"kMILL tiped.fa $(("+kmerSize+"-1)) $(("+kmerSize+"-2)) >>logs/logBcalm 2>>logs/logBcalm").c_str());
 	c=system(("mv out_tiped.fa.fa dbg.fa"));
+
 	//GRAPH MAPPING
+	auto point3=system_clock::now();
+	cout<<"Building DBG took "<<duration_cast<seconds>(point3-point2).count()<<" seconds"<<endl;
 	cout<<"Read mapping on the graph "<<endl;
 	c=system((prefixCommand+"bgreat -k "+to_string(k)+"  "+bgreatArg+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readCooled.fa  -m 10 -e 100 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
 	//~ c=system((prefixCommand+"bgreat -k "+kmerSize+" -u  "+unPairedFile+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readCooled.fa  -m 5 -e 2 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
 
 	c=system(("rm *.h5 bankBcalm.txt  out_out.unitigs.fa.fa  out.unitigs.fa tiped.fa"));
 	auto end=system_clock::now();
+	cout<<"Mapping on DBG took "<<duration_cast<seconds>(end-point3).count()<<" seconds"<<endl;
     auto waitedFor=end-start;
-    cout<<"Waited for "<<duration_cast<seconds>(waitedFor).count()<<" seconds"<<endl;
+    cout<<"Whole process took "<<duration_cast<seconds>(waitedFor).count()<<" seconds"<<endl;
 	cout<<"The end"<<endl;
     return 0;
 }
