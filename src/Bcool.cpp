@@ -122,6 +122,7 @@ int main(int argc, char *argv[]) {
 	cout<<"Building DBG took "<<duration_cast<seconds>(point3-point2).count()<<" seconds"<<endl;
 	cout<<"Read mapping on the graph "<<endl;
 	c=system((prefixCommand+"bgreat -k "+to_string(k)+" -a 21  "+bgreatArg+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readsCooled.fa  -m 10 -e 100 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
+	c=system((prefixCommand+"bgreat -k "+to_string(k)+" -a 21  "+unPairedFile+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readsCorrected.fa  -m 10 -e 100 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
 	//~ c=system((prefixCommand+"bgreat -k "+kmerSize+" -u  "+unPairedFile+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readCooled.fa  -m 5 -e 2 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
 
 	c=system(("rm *.h5 bankBcalm.txt  out_out.unitigs.fa.fa  out.unitigs.fa tiped.fa"));

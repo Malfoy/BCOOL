@@ -19,7 +19,6 @@ cd src;
 
 threadNumber=8
 SCRIPT=$(readlink -f $0)
-# Absolute path this script is in. /home/user/bin
 folder=`dirname $SCRIPT`
 folder+="/bin"
 
@@ -57,7 +56,7 @@ if [ -z "$folder"  ]; then
 
 
 mkdir $folder;
-echo "I put binaries in $folder"
+echo "I put binaries in $folder";
 
 
 
