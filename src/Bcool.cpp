@@ -24,8 +24,8 @@ void help(){
 	<<"Options and default values: "<<endl
 	<<"-u for read file"<<endl
 	<<"-o for working folder (.)"<<endl
-	<<"-k for  kmer size (51)"<<endl
-	<<"-s for kmer solidity threshold (2)"<<endl
+	<<"-k for  kmer size (63)"<<endl
+	<<"-s for kmer solidity threshold (5)"<<endl
 	<<"-l tipping length (100)"<<endl
 	<<"-t for core used (max)"<<endl
 	<<"-c for correction step (1)"<<endl
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 	string unPairedFile(""),workingFolder("."),prefixCommand(""),folderStr(STR(folder)),bgreatArg,bloocooArg,slowParameter("");
-	uint k(51),solidity(2),coreUsed(0),correctionStep(1),tipLength(100);
+	uint k(63),solidity(5),coreUsed(0),correctionStep(1),tipLength(100);
 	if(folderStr!=""){
 		prefixCommand=folderStr+"/";
 	}
@@ -121,9 +121,7 @@ int main(int argc, char *argv[]) {
 	auto point3=system_clock::now();
 	cout<<"Building DBG took "<<duration_cast<seconds>(point3-point2).count()<<" seconds"<<endl;
 	cout<<"Read mapping on the graph "<<endl;
-	c=system((prefixCommand+"bgreat -k "+to_string(k)+" -a 21  "+bgreatArg+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readsCooled.fa  -m 10 -e 100 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
 	c=system((prefixCommand+"bgreat -k "+to_string(k)+" -a 21  -u "+unPairedFile+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readsCorrected.fa  -m 10 -e 100 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
-	//~ c=system((prefixCommand+"bgreat -k "+kmerSize+" -u  "+unPairedFile+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readCooled.fa  -m 5 -e 2 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
 
 	c=system(("rm *.h5 bankBcalm.txt  out_out.unitigs.fa.fa  out.unitigs.fa tiped.fa"));
 	auto end=system_clock::now();
