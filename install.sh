@@ -73,7 +73,7 @@ cmake -DKSIZE_LIST="32" .. >>logCompile 2>>logCompile;
 make -j $threadNumber >>logCompile 2>>logCompile;
 cp bin/Bloocoo Bloocoo32;
 cp Bloocoo32 $folder;
-cd ..;
+cd ../..;
 #~ mkdir build64; cd build64;
 #~ cmake -DKSIZE_LIST="64" .. >>logCompile 2>>logCompile;
 #~ make -j $threadNumber >>logCompile 2>>logCompile;
