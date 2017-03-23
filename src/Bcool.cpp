@@ -77,9 +77,9 @@ int main(int argc, char *argv[]) {
 	c=system(("mkdir "+workingFolder).c_str());
 	c=chdir(workingFolder.c_str());
 	c=system("mkdir logs");
-	ofstream param("ParametersUsed.txt");
 	ofstream bankBcalm("bankBcalm.txt");
-	param<<"k: "<<k<<" solidity: "<<solidity<<endl;
+	ofstream param("ParametersUsed.txt");
+	param<<"k: "<<k<<" solidity: "<<solidity<<" tiping length: "<<tipLength<<" correctionsteps: "<<correctionStep<<endl;
 	bloocooArg=unPairedFile;
 	bgreatArg=" -u reads_corrected.fa ";
 	bankBcalm<<"reads_corrected.fa"<<endl;
