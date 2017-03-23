@@ -74,19 +74,18 @@ make -j $threadNumber >>logCompile 2>>logCompile;
 cp bin/Bloocoo Bloocoo32;
 cp Bloocoo32 $folder;
 cd ..;
-mkdir build64; cd build64;
-cmake -DKSIZE_LIST="64" .. >>logCompile 2>>logCompile;
-make -j $threadNumber >>logCompile 2>>logCompile;
-cp bin/Bloocoo Bloocoo64;
-cp Bloocoo64 $folder;
-cd ..;
-mkdir build128; cd build128;
-cmake -DKSIZE_LIST="128" .. >>logCompile 2>>logCompile;
-make -j $threadNumber >>logCompile 2>>logCompile;
-cp bin/Bloocoo Bloocoo128;
-cp Bloocoo128 $folder;
-cd ../..;
-cp bloocoo/build32/ext/gatb-core/bin/h5dump $folder;
+#~ mkdir build64; cd build64;
+#~ cmake -DKSIZE_LIST="64" .. >>logCompile 2>>logCompile;
+#~ make -j $threadNumber >>logCompile 2>>logCompile;
+#~ cp bin/Bloocoo Bloocoo64;
+#~ cp Bloocoo64 $folder;
+#~ cd ..;
+#~ mkdir build128; cd build128;
+#~ cmake -DKSIZE_LIST="128" .. >>logCompile 2>>logCompile;
+#~ make -j $threadNumber >>logCompile 2>>logCompile;
+#~ cp bin/Bloocoo Bloocoo128;
+#~ cp Bloocoo128 $folder;
+#~ cd ../..;
 
 
 

@@ -26,7 +26,7 @@ void help(){
 	<<"-o for working folder (.)"<<endl
 	<<"-k for  kmer size (63)"<<endl
 	<<"-s for kmer solidity threshold (5)"<<endl
-	<<"-l tipping length (100)"<<endl
+	<<"-l tipping length (300)"<<endl
 	<<"-t for core used (max)"<<endl
 	<<"-c for correction step (1)"<<endl
 	;
@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
 		help();
 		exit(0);
 	}
-	string unPairedFile(""),workingFolder("."),prefixCommand(""),folderStr(STR(folder)),bgreatArg,bloocooArg,slowParameter("");
-	uint k(63),solidity(5),coreUsed(0),correctionStep(1),tipLength(100);
+	string unPairedFile(""),workingFolder("."),prefixCommand(""),folderStr(STR(folder)),bgreatArg,bloocooArg,slowParameter("-slow");
+	uint k(63),solidity(5),coreUsed(0),correctionStep(1),tipLength(300);
 	if(folderStr!=""){
 		prefixCommand=folderStr+"/";
 	}
