@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
 	c=system(("mkdir "+workingFolder).c_str());
 	c=chdir(workingFolder.c_str());
 	c=system("mkdir logs");
-	ofstream bankBcalm("bankBcalm.txt");
+	ofstream bankBcalm("bankBcalm");
 	ofstream param("ParametersUsed.txt");
 	param<<"k: "<<k<<" solidity: "<<solidity<<" tiping length: "<<tipLength<<" correctionsteps: "<<correctionStep<<endl;
 	bloocooArg=unPairedFile;
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
 	//GRAPH CONSTRUCTION
 	auto point2=system_clock::now();
 	cout<<"Pre-Correction took "<<duration_cast<seconds>(point2-point1).count()<<" seconds"<<endl;
-	string fileBcalm("bankBcalm.txt"),kmerSize(to_string(k));
+	string fileBcalm("bankBcalm"),kmerSize(to_string(k));
 	cout<<"Graph construction "<<endl;
 	string kmerSizeTip((to_string(tipLength)));
 	c=system((prefixCommand+"bcalm -in "+fileBcalm+" -kmer-size "+kmerSize+" -abundance-min "+to_string(solidity)+" -out out  -nb-cores "+to_string(coreUsed)+"  >>logs/logBcalm 2>>logs/logBcalm").c_str());
