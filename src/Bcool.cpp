@@ -39,13 +39,13 @@ int main(int argc, char *argv[]) {
 		help();
 		exit(0);
 	}
-	string unPairedFile(""),workingFolder("."),prefixCommand(""),folderStr(STR(folder)),bgreatArg,bloocooArg,slowParameter("-slow");
-	uint k(63),solidity(5),coreUsed(0),correctionStep(1),tipLength(300);
+	string unPairedFile(""),workingFolder("."),prefixCommand(""),folderStr(STR(folder)),bgreatArg,bloocooArg,slowParameter("");
+	uint k(21),K(63),solidity(5),coreUsed(0),correctionStep(0),tipLength(300),graphstep(2);
 	if(folderStr!=""){
 		prefixCommand=folderStr+"/";
 	}
 	char c;
-	while ((c = getopt (argc, argv, "u:x:o:s:k:p:c:t:S:l:")) != -1){
+	while ((c = getopt (argc, argv, "u:x:o:s:k:K:p:c:t:S:l:")) != -1){
 	switch(c){
 		case 'u':
 			unPairedFile=realpath(optarg,NULL);
@@ -58,6 +58,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'k':
 			k=stoi(optarg);
+			break;
+		case 'K':
+			K=stoi(optarg);
 			break;
 		case 'l':
 			tipLength=stoi(optarg);
@@ -85,7 +88,7 @@ int main(int argc, char *argv[]) {
 	bankBcalm<<"reads_corrected.fa"<<endl;
 	auto start=system_clock::now();
 
-	//CORRECTION
+	//PRECORRECTION
 	auto point1=system_clock::now();
 	cout<<"Reads pre-Correction"<<endl;
 	string fileToCorrect(unPairedFile);
@@ -103,29 +106,39 @@ int main(int argc, char *argv[]) {
 	}else{
 		c=system(("mv "+bloocooArg+" reads_corrected.fa").c_str());
 	}
-
-	//GRAPH CONSTRUCTION
 	auto point2=system_clock::now();
 	cout<<"Pre-Correction took "<<duration_cast<seconds>(point2-point1).count()<<" seconds"<<endl;
-	string fileBcalm("bankBcalm.txt"),kmerSize(to_string(k));
-	cout<<"Graph construction "<<endl;
-	string kmerSizeTip((to_string(tipLength)));
-	c=system((prefixCommand+"bcalm -in "+fileBcalm+" -kmer-size "+kmerSize+" -abundance-min "+to_string(solidity)+" -out out  -nb-cores "+to_string(coreUsed)+"  >>logs/logBcalm 2>>logs/logBcalm").c_str());
-	//~ c=system((prefixCommand+ "h5dump -y -d histogram/histogram  out.h5  > logs/histodbg"+(kmerSize)).c_str());
-	c=system((prefixCommand+"kMILL out.unitigs.fa $(("+kmerSize+"-1)) $(("+kmerSize+"-2)) >>logs/logBcalm 2>>logs/logBcalm").c_str());
-	c=system((prefixCommand+"tipCleaner out_out.unitigs.fa.fa $(("+kmerSize+"-1)) "+kmerSizeTip+" >>logs/logTip 2>>logs/logTip").c_str());
-	c=system((prefixCommand+"kMILL tiped.fa $(("+kmerSize+"-1)) $(("+kmerSize+"-2)) >>logs/logBcalm 2>>logs/logBcalm").c_str());
-	c=system(("mv out_tiped.fa.fa dbg.fa"));
 
-	//GRAPH MAPPING
-	auto point3=system_clock::now();
-	cout<<"Building DBG took "<<duration_cast<seconds>(point3-point2).count()<<" seconds"<<endl;
-	cout<<"Read mapping on the graph "<<endl;
-	c=system((prefixCommand+"bgreat -k "+to_string(k)+" -a 21  -u "+unPairedFile+" -g dbg.fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f readsCorrected.fa  -m 10 -e 100 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
+	//CORRECTION
+	vector<string> kmerSizeGraph={"0",to_string(k),to_string(K)};
+	uint indiceGraph(1);
+	for(;indiceGraph<min(graphstep+1,(uint)kmerSizeGraph.size());++indiceGraph){
+		//GRAPH CONSTRUCTION
+		string fileBcalm,kmerSize(to_string(k));
+		if(indiceGraph==1){
+			fileBcalm=("reads_corrected.fa");
+		}else{
+			fileBcalm=("reads_cooled1.fa");
+		}
+		cout<<"Graph construction "<<endl;
+		string kmerSizeTip((to_string(tipLength)));
+		c=system((prefixCommand+"bcalm -in "+fileBcalm+" -kmer-size "+kmerSizeGraph[indiceGraph]+" -abundance-min "+to_string(solidity)+" -out out  -nb-cores "+to_string(coreUsed)+"  >>logs/logBcalm 2>>logs/logBcalm").c_str());
+		c=system((prefixCommand+"kMILL out.unitigs.fa $(("+kmerSize+"-1)) $(("+kmerSize+"-2)) >>logs/logBcalm 2>>logs/logBcalm").c_str());
+		c=system((prefixCommand+"tipCleaner out_out.unitigs.fa.fa $(("+kmerSize+"-1)) "+kmerSizeTip+" >>logs/logTip 2>>logs/logTip").c_str());
+		c=system((prefixCommand+"kMILL tiped.fa $(("+kmerSize+"-1)) $(("+kmerSize+"-2)) >>logs/logBcalm 2>>logs/logBcalm").c_str());
+		c=system(("mv out_tiped.fa.fa dbg"+to_string(indiceGraph)+".fa").c_str());
 
+		//GRAPH MAPPING
+		auto point3=system_clock::now();
+		cout<<"Building DBG took "<<duration_cast<seconds>(point3-point2).count()<<" seconds"<<endl;
+		cout<<"Read mapping on the graph "<<endl;
+		c=system((prefixCommand+"bgreat -k "+(kmerSizeGraph[indiceGraph])+" -a 21  -u "+unPairedFile+" -g dbg"+to_string(indiceGraph)+".fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f reads_cooled"+to_string(indiceGraph)+".fa  -m 10 -e 100 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
+		auto end=system_clock::now();
+		cout<<"Mapping on DBG took "<<duration_cast<seconds>(end-point3).count()<<" seconds"<<endl;
+	}
+	//CLEANING
 	c=system(("rm *.h5 bankBcalm.txt  out_out.unitigs.fa.fa  out.unitigs.fa tiped.fa"));
 	auto end=system_clock::now();
-	cout<<"Mapping on DBG took "<<duration_cast<seconds>(end-point3).count()<<" seconds"<<endl;
     auto waitedFor=end-start;
     cout<<"Whole process took "<<duration_cast<seconds>(waitedFor).count()<<" seconds"<<endl;
 	cout<<"The end"<<endl;
