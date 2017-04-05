@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
 			kmerSize=(to_string(k));
 		}else{
 			fileBcalm=("reads_cooled1.fa");
-			kmerSize=(to_string(K))
+			kmerSize=(to_string(K));
 			solidity=solidity2;
 		}
 		cout<<"Graph construction "<<endl;
