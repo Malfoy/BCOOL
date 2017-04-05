@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 	string unPairedFile(""),workingFolder("."),prefixCommand(""),folderStr(STR(folder)),bgreatArg,bloocooArg,slowParameter("");
-	uint k(21),K(63),solidity(5),coreUsed(0),correctionStep(0),tipLength(300),graphstep(2);
+	uint k(31),K(63),solidity(3),solidity2(2),coreUsed(0),correctionStep(0),tipLength(300),graphstep(2);
 	if(folderStr!=""){
 		prefixCommand=folderStr+"/";
 	}
@@ -55,6 +55,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 's':
 			solidity=stoi(optarg);
+			break;
+		case 'S':
+			solidity2=stoi(optarg);
 			break;
 		case 'k':
 			k=stoi(optarg);
@@ -119,6 +122,7 @@ int main(int argc, char *argv[]) {
 			fileBcalm=("reads_corrected.fa");
 		}else{
 			fileBcalm=("reads_cooled1.fa");
+			solidity=solidity2;
 		}
 		cout<<"Graph construction "<<endl;
 		string kmerSizeTip((to_string(tipLength)));
