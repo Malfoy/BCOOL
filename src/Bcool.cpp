@@ -117,16 +117,19 @@ int main(int argc, char *argv[]) {
 	uint indiceGraph(1);
 	for(;indiceGraph<min(graphstep+1,(uint)kmerSizeGraph.size());++indiceGraph){
 		//GRAPH CONSTRUCTION
-		string fileBcalm,kmerSize(to_string(k));
+		string fileBcalm,kmerSize;
+
 		if(indiceGraph==1){
 			fileBcalm=("reads_corrected.fa");
+			kmerSize=(to_string(k));
 		}else{
 			fileBcalm=("reads_cooled1.fa");
+			kmerSize=(to_string(K))
 			solidity=solidity2;
 		}
 		cout<<"Graph construction "<<endl;
 		string kmerSizeTip((to_string(tipLength)));
-		c=system((prefixCommand+"bcalm -in "+fileBcalm+" -kmer-size "+kmerSizeGraph[indiceGraph]+" -abundance-min "+to_string(solidity)+" -out out  -nb-cores "+to_string(coreUsed)+"  >>logs/logBcalm 2>>logs/logBcalm").c_str());
+		c=system((prefixCommand+"bcalm -in "+fileBcalm+" -kmer-size "+kmerSize+" -abundance-min "+to_string(solidity)+" -out out  -nb-cores "+to_string(coreUsed)+"  >>logs/logBcalm 2>>logs/logBcalm").c_str());
 		c=system((prefixCommand+"kMILL out.unitigs.fa $(("+kmerSize+"-1)) $(("+kmerSize+"-2)) >>logs/logBcalm 2>>logs/logBcalm").c_str());
 		c=system((prefixCommand+"tipCleaner out_out.unitigs.fa.fa $(("+kmerSize+"-1)) "+kmerSizeTip+" >>logs/logTip 2>>logs/logTip").c_str());
 		c=system((prefixCommand+"kMILL tiped.fa $(("+kmerSize+"-1)) $(("+kmerSize+"-2)) >>logs/logBcalm 2>>logs/logBcalm").c_str());
@@ -136,7 +139,7 @@ int main(int argc, char *argv[]) {
 		auto point3=system_clock::now();
 		cout<<"Building DBG took "<<duration_cast<seconds>(point3-point2).count()<<" seconds"<<endl;
 		cout<<"Read mapping on the graph "<<endl;
-		c=system((prefixCommand+"bgreat -k "+(kmerSizeGraph[indiceGraph])+" -a 21  -u "+unPairedFile+" -g dbg"+to_string(indiceGraph)+".fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f reads_cooled"+to_string(indiceGraph)+".fa  -m 10 -e 100 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
+		c=system((prefixCommand+"bgreat -k "+(kmerSize)+" -a 21  -u "+unPairedFile+" -g dbg"+to_string(indiceGraph)+".fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f reads_cooled"+to_string(indiceGraph)+".fa  -m 10 -e 100 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
 		auto end=system_clock::now();
 		cout<<"Mapping on DBG took "<<duration_cast<seconds>(end-point3).count()<<" seconds"<<endl;
 	}
