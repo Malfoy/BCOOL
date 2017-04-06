@@ -40,12 +40,12 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 	string unPairedFile(""),workingFolder("."),prefixCommand(""),folderStr(STR(folder)),bgreatArg,bloocooArg,slowParameter("");
-	uint k(31),K(63),solidity(3),solidity2(2),coreUsed(0),correctionStep(0),tipLength(300),graphstep(2);
+	uint k(31),K(61),solidity(5),solidity2(5),coreUsed(0),correctionStep(0),tipLength(100),graphstep(2);
 	if(folderStr!=""){
 		prefixCommand=folderStr+"/";
 	}
 	char c;
-	while ((c = getopt (argc, argv, "u:x:o:s:k:K:p:c:t:S:l:")) != -1){
+	while ((c = getopt (argc, argv, "u:x:o:s:k:K:p:c:t:S:l:g:")) != -1){
 	switch(c){
 		case 'u':
 			unPairedFile=realpath(optarg,NULL);
@@ -74,6 +74,9 @@ int main(int argc, char *argv[]) {
 		case 'c':
 			correctionStep=stoi(optarg);
 			break;
+		case 'g':
+			graphstep=stoi(optarg);
+			break;
 		}
 	}
 	if(unPairedFile==""){
@@ -85,7 +88,7 @@ int main(int argc, char *argv[]) {
 	c=system("mkdir logs");
 	ofstream param("ParametersUsed.txt");
 	ofstream bankBcalm("bankBcalm.txt");
-	param<<"k: "<<k<<" solidity: "<<solidity<<" tiping length: "<<tipLength<<" correctionsteps: "<<correctionStep<<endl;
+	param<<"first k: "<<k<<"first solidity: "<<solidity<<" tiping length: "<<tipLength<<" precorrectionsteps: "<<correctionStep<<" second k: "<<K<<" second solidity: "<<solidity2<<" graphstep: "<<graphstep<<endl;
 	bloocooArg=unPairedFile;
 	bgreatArg=" -u reads_corrected.fa ";
 	bankBcalm<<"reads_corrected.fa"<<endl;
@@ -124,6 +127,7 @@ int main(int argc, char *argv[]) {
 			kmerSize=(to_string(k));
 		}else{
 			fileBcalm=("reads_cooled1.fa");
+			unPairedFile=("reads_cooled1.fa");
 			kmerSize=(to_string(K));
 			solidity=solidity2;
 		}
