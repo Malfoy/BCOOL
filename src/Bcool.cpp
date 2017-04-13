@@ -41,11 +41,12 @@ int main(int argc, char *argv[]) {
 	}
 	string unPairedFile(""),workingFolder("."),prefixCommand(""),folderStr(STR(folder)),bgreatArg,bloocooArg,slowParameter("");
 	uint k(31),K(61),solidity(5),solidity2(5),coreUsed(0),correctionStep(0),tipLength(100),graphstep(2);
+	float ratioError(0.2),ratioError2(0.2);
 	if(folderStr!=""){
 		prefixCommand=folderStr+"/";
 	}
 	char c;
-	while ((c = getopt (argc, argv, "u:x:o:s:k:K:p:c:t:S:l:g:")) != -1){
+	while ((c = getopt (argc, argv, "u:x:o:s:k:K:p:c:t:S:l:g:r:R:")) != -1){
 	switch(c){
 		case 'u':
 			unPairedFile=realpath(optarg,NULL);
@@ -77,6 +78,12 @@ int main(int argc, char *argv[]) {
 		case 'g':
 			graphstep=stoi(optarg);
 			break;
+		case 'r':
+			ratioError=stof(optarg);
+			break;
+		case 'R':
+			ratioError2=stof(optarg);
+			break;
 		}
 	}
 	if(unPairedFile==""){
@@ -93,6 +100,7 @@ int main(int argc, char *argv[]) {
 	bgreatArg=" -u reads_corrected.fa ";
 	bankBcalm<<"reads_corrected.fa"<<endl;
 	auto start=system_clock::now();
+
 
 	//PRECORRECTION
 	auto point1=system_clock::now();
@@ -115,6 +123,7 @@ int main(int argc, char *argv[]) {
 	auto point2=system_clock::now();
 	cout<<"Pre-Correction took "<<duration_cast<seconds>(point2-point1).count()<<" seconds"<<endl;
 
+
 	//CORRECTION
 	vector<string> kmerSizeGraph={"0",to_string(k),to_string(K)};
 	uint indiceGraph(1);
@@ -130,6 +139,7 @@ int main(int argc, char *argv[]) {
 			unPairedFile=("reads_cooled1.fa");
 			kmerSize=(to_string(K));
 			solidity=solidity2;
+			ratioError=ratioError2;
 		}
 		cout<<"Graph construction "<<endl;
 		string kmerSizeTip((to_string(tipLength)));
@@ -143,7 +153,7 @@ int main(int argc, char *argv[]) {
 		auto point3=system_clock::now();
 		cout<<"Building DBG took "<<duration_cast<seconds>(point3-point2).count()<<" seconds"<<endl;
 		cout<<"Read mapping on the graph "<<endl;
-		c=system((prefixCommand+"bgreat -k "+(kmerSize)+" -a 21  -u "+unPairedFile+" -g dbg"+to_string(indiceGraph)+".fa -t "+to_string((coreUsed==0)?10:coreUsed) +" -f reads_cooled"+to_string(indiceGraph)+".fa  -m 10 -e 100 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
+		c=system((prefixCommand+"bgreat -k "+(kmerSize)+" -a 21 -r "+to_string(ratioError)+" -u "+unPairedFile+" -g dbg"+to_string(indiceGraph)+".fa -t "+to_string((coreUsed==0)?20:coreUsed) +" -f reads_cooled"+to_string(indiceGraph)+".fa  -m 10 -e 100 -O -c >>logs/logBgreat 2>>logs/logBgreat").c_str());
 		auto end=system_clock::now();
 		cout<<"Mapping on DBG took "<<duration_cast<seconds>(end-point3).count()<<" seconds"<<endl;
 	}
