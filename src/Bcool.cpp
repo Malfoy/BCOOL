@@ -24,11 +24,16 @@ void help(){
 	<<"Options and default values: "<<endl
 	<<"-u for read file"<<endl
 	<<"-o for working folder (.)"<<endl
-	<<"-k for  kmer size (63)"<<endl
+	<<"-k for first kmer size (31)"<<endl
+	<<"-K for second kmer size (61)"<<endl
 	<<"-s for kmer solidity threshold (5)"<<endl
-	<<"-l tipping length (300)"<<endl
+	<<"-r for second kmer solidity threshold (5)"<<endl
+	<<"-s for error rate  (0.2)"<<endl
+	<<"-R for second error rate (0.2)"<<endl
+	<<"-l tipping length (100)"<<endl
 	<<"-t for core used (max)"<<endl
-	<<"-c for correction step (1)"<<endl
+	<<"-c for pre-correction step (0)"<<endl
+	<<"-g for correction step (2)"<<endl
 	;
 }
 
@@ -95,7 +100,7 @@ int main(int argc, char *argv[]) {
 	c=system("mkdir logs");
 	ofstream param("ParametersUsed.txt");
 	ofstream bankBcalm("bankBcalm.txt");
-	param<<"first k: "<<k<<"first solidity: "<<solidity<<" tiping length: "<<tipLength<<" precorrectionsteps: "<<correctionStep<<" second k: "<<K<<" second solidity: "<<solidity2<<" graphstep: "<<graphstep<<endl;
+	param<<"first k: "<<k<<"first solidity: "<<solidity<<" tiping length: "<<tipLength<<" precorrectionsteps: "<<correctionStep<<" second k: "<<K<<" second solidity: "<<solidity2<<" graphstep: "<<graphstep<<" first ratio error: "<<ratioError<<" second ratio error"<<ratioError2<<endl;
 	bloocooArg=unPairedFile;
 	bgreatArg=" -u reads_corrected.fa ";
 	bankBcalm<<"reads_corrected.fa"<<endl;
