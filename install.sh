@@ -18,8 +18,7 @@ cd src;
 
 
 threadNumber=8
-SCRIPT=$(readlink -f $0)
-folder=`dirname $SCRIPT`
+folder=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 folder+="/bin"
 
 
@@ -60,11 +59,6 @@ echo "I put binaries in $folder";
 
 
 
-make LOL=-Dfolder=$folder -j $threadNumber >>logCompile 2>>logCompile;
-cp bcool ..;
-echo PHASE ZERO LAUNCHER: BCOOL;
-
-
 
 git clone --recursive https://github.com/GATB/bloocoo.git >>logCompile 2>>logCompile;
 cd bloocoo;
@@ -89,7 +83,7 @@ cd ../..;
 
 
 
-echo PHASE ONE, READ CORRECTION: BLOOCOO;
+echo PHASE ONE, READ PreCORRECTION: BLOOCOO;
 
 
 
@@ -112,15 +106,17 @@ cd ..;
 echo PHASE THREE, READ MAPPING ON THE DBG: BGREAT;
 
 
-
-git clone https://github.com/kamimrcht/kMILL >>logCompile 2>>logCompile;
-cd kMILL/src;
+git clone https://github.com/Malfoy/BTRIM >>logCompile 2>>logCompile;
+cd BTRIM;
 make -j $threadNumber >>logCompile 2>>logCompile;
-cp kMILL $folder;
-cp sequencesCleaner $folder;
-cp tipCleaner $folder;
-cd ../..;
-echo PHASE FOUR, Sequences cleaning: KMILL;
+if [ $? -ne 0 ]
+       then
+              echo "there was a problem with btrim compilation, check logs"
+              exit 1
+       fi
+cp btrim $folder;
+cd ..;
+echo PHASE FOUR GRAPH CLEANING: BTRIM;
 
 
 
