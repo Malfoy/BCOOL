@@ -14,7 +14,7 @@ addons:
     - cmake
     - cmake-data
 script:
-- "./install.sh"
+- "./package.sh"
 before_deploy:
 - export RELEASE_FILE=bin.tar.gz
 - ls

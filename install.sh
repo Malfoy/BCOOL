@@ -68,18 +68,7 @@ make -j $threadNumber >>logCompile 2>>logCompile;
 cp bin/Bloocoo Bloocoo32;
 cp Bloocoo32 $folder;
 cd ../..;
-#~ mkdir build64; cd build64;
-#~ cmake -DKSIZE_LIST="64" .. >>logCompile 2>>logCompile;
-#~ make -j $threadNumber >>logCompile 2>>logCompile;
-#~ cp bin/Bloocoo Bloocoo64;
-#~ cp Bloocoo64 $folder;
-#~ cd ..;
-#~ mkdir build128; cd build128;
-#~ cmake -DKSIZE_LIST="128" .. >>logCompile 2>>logCompile;
-#~ make -j $threadNumber >>logCompile 2>>logCompile;
-#~ cp bin/Bloocoo Bloocoo128;
-#~ cp Bloocoo128 $folder;
-#~ cd ../..;
+
 
 
 
@@ -90,7 +79,7 @@ echo PHASE ONE, READ PreCORRECTION: BLOOCOO;
 git clone --recursive https://github.com/GATB/bcalm >>logCompile 2>>logCompile;
 cd bcalm;
 mkdir build; cd build;
-cmake -DKSIZE_LIST="32 64 96 128 160" ..  >>logCompile 2>>logCompile;
+cmake -DKSIZE_LIST="32 64 128" ..  >>logCompile 2>>logCompile;
 make -j $threadNumber >>logCompile 2>>logCompile;
 cp bcalm $folder;
 cd ../..;
@@ -118,9 +107,6 @@ cp btrim $folder;
 cd ..;
 echo PHASE FOUR GRAPH CLEANING: BTRIM;
 
-
-cd .. ;
-tar -czvf bin.tar.gz bin ;
 
 
 
