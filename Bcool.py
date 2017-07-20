@@ -254,7 +254,7 @@ def graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 			# Read Mapping
 			print("\t#Read mapping with BGREAT... ", flush=True)
 			# BGREAT
-			cmd=BWISE_INSTDIR + "/bgreat -k " + str(kmerSize) + "  -u reads_corrected.fa -g dbg" + str(kmerSize) + ".fa -t " + coreUsed + " -a 31 -m "+str(missmatchAllowed)+" -c -O -e "+str(mappingEffort)
+			cmd=BWISE_INSTDIR + "/bgreat -k " + str(kmerSize) + "  -u reads_corrected.fa -g dbg" + str(kmerSize) + ".fa -t " + coreUsed + " -a 21 -m "+str(missmatchAllowed)+" -c -O -e "+str(mappingEffort)
 			printCommand("\t\t"+cmd)
 			p = subprocessLauncher(cmd, logBgreatToWrite, logBgreatToWrite)
 			checkWrittenFiles(OUT_DIR + "/paths")
