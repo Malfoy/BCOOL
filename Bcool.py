@@ -300,7 +300,7 @@ def main():
 	parser.add_argument('-t', action="store", dest="nb_cores",				type=int,	default = 0,	help="number of cores used (default max)")
 	parser.add_argument('-e', action="store", dest="mapping_Effort",				type=int,	default = 100,	help="Anchors to test for mapping (default 100)")
 	parser.add_argument('-C', action="store", dest="unitig_Coverage",				type=int,	default = 5,	help="unitigCoverage for first cleaning (default 5)")
-	parser.add_argument('-m', action="store", dest="missmatch_allowed",				type=int,	default = 2,	help="missmatch allowed in mapping (default 2)")
+	parser.add_argument('-m', action="store", dest="missmatch_allowed",				type=int,	default = 10,	help="missmatch allowed in mapping (default 2)")
 	parser.add_argument('--version', action='version', version='%(prog)s 0.0.1')
 
 

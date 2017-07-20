@@ -119,6 +119,10 @@ cd ..;
 echo PHASE FOUR GRAPH CLEANING: BTRIM;
 
 
+cd .. ;
+tar -czvf bin.tar.gz bin ;
+
+
 
 echo The end !;
 
