@@ -108,7 +108,6 @@ cd ..;
 echo PHASE FOUR GRAPH CLEANING: BTRIM;
 
 
-cd .. ;
 tar -czvf bin.tar.gz $folder ;
 
 
