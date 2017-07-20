@@ -65,7 +65,7 @@ cd bloocoo;
 mkdir build32; cd build32;
 cmake -DKSIZE_LIST="32" .. ;
 make -j $threadNumber ;
-cp bin/Bloocoo Bloocoo32;
+mv bin/Bloocoo Bloocoo32;
 cp Bloocoo32 $folder;
 cd ../..;
 
@@ -109,7 +109,7 @@ echo PHASE FOUR GRAPH CLEANING: BTRIM;
 
 
 cd .. ;
-tar -czvf bin.tar.gz bin ;
+tar -czvf bin.tar.gz $folder ;
 
 
 
