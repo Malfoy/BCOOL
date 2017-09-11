@@ -14,8 +14,8 @@ echo "-t to use multiple thread for compilation (default 8)"
 }
 
 
-cd src;
-
+#~ mkdir src;
+#~ cd src;
 
 threadNumber=8
 folder=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -60,19 +60,14 @@ echo "I put binaries in $folder";
 
 
 
-git clone --recursive https://github.com/GATB/bloocoo.git >>logCompile 2>>logCompile;
-cd bloocoo;
-mkdir build32; cd build32;
-cmake -DKSIZE_LIST="32" .. >>logCompile 2>>logCompile;
+git clone --recursive https://github.com/bcgsc/ntCard >>logCompile 2>>logCompile;
+cd ntCard;
+./autogen.sh >>logCompile 2>>logCompile;
+./configure CFLAGS='-g -O3' CXXFLAGS='-g -O3' >>logCompile 2>>logCompile;
 make -j $threadNumber >>logCompile 2>>logCompile;
-cp bin/Bloocoo Bloocoo32;
-cp Bloocoo32 $folder;
-cd ../..;
-
-
-
-
-echo PHASE ONE, READ PreCORRECTION: BLOOCOO;
+cp ntcard $folder;
+cd ..;
+echo PHASE ONE, kmer spectrum estimator ntcard;
 
 
 
@@ -104,6 +99,7 @@ if [ $? -ne 0 ]
               exit 1
        fi
 cp btrim $folder;
+cp badvisor $folder;
 cd ..;
 echo PHASE FOUR GRAPH CLEANING: BTRIM;
 

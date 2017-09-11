@@ -295,7 +295,7 @@ def main():
 	parser.add_argument("-u", action="store", dest="single_readfiles",		type=str,					help="input fasta read files. Several read files must be concatenated.")
 	parser.add_argument('-s', action="store", dest="min_cov",				type=int,	default = 2,	help="an integer, k-mers present strictly less than this number of times in the dataset will be discarded (default 2)")
 	parser.add_argument('-o', action="store", dest="out_dir",				type=str,	default=os.getcwd(),	help="path to store the results (default = current directory)")
-	parser.add_argument('-k', action="store", dest="kSize",					type=int,	default = 63,	help="an integer,  k-mer size (default 63)")
+	parser.add_argument('-k', action="store", dest="kSize",					type=int,	default = 0,	help="an integer,  k-mer size (default 63)")
 	parser.add_argument('-c', action="store", dest="nb_correction",	type=int,	default = 0,	help="an integer, number of steps of read correction (default 0)")
 	parser.add_argument('-t', action="store", dest="nb_cores",				type=int,	default = 0,	help="number of cores used (default max)")
 	parser.add_argument('-e', action="store", dest="mapping_Effort",				type=int,	default = 100,	help="Anchors to test for mapping (default 100)")
@@ -414,11 +414,21 @@ def main():
 
 
 	# ------------------------------------------------------------------------
-	#						   Correction
+	#						   Kmer size selection
 	# ------------------------------------------------------------------------
 	t = time.time()
-	correctionReads(BWISE_MAIN, BWISE_INSTDIR, paired_readfiles, single_readfiles, toolsArgs, fileCase, nb_correction_steps, OUT_DIR, nb_cores, OUT_LOG_FILES)
-	print(printTime("Pre-Correction took: ", time.time() - t))
+	if(kSize==0):
+	#~ correctionReads(BWISE_MAIN, BWISE_INSTDIR, paired_readfiles, single_readfiles, toolsArgs, fileCase, nb_correction_steps, OUT_DIR, nb_cores, OUT_LOG_FILES)
+		cmd="ln -fs " + single_readfiles + " " + OUT_DIR + "/reads_corrected.fa"
+		printCommand("\t\t\t"+cmd)
+		p = subprocessLauncher(cmd)
+		cmd=BWISE_INSTDIR + "/ntcard -k 21,31,41,51,61,71,81,91,101,111,121 -t "+str(nb_cores)+" -p reads "+single_readfiles
+		printCommand("\t\t\t"+cmd)
+		p = subprocessLauncher(cmd)
+		cmd=BWISE_INSTDIR + "/badvisor reads "
+		printCommand("\t\t\t"+cmd)
+		kSize = int(subprocess.check_output(cmd, shell=True))
+	print(printTime("Kmer selected : k="+str(kSize), time.time() - t))
 
 
 	# ------------------------------------------------------------------------
