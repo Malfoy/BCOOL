@@ -5,7 +5,7 @@ import os
 import re
 import sys
 import time
-import shlex, subprocess
+import shlex, subprocess, glob
 import struct
 import shutil
 import os.path
@@ -112,7 +112,7 @@ def correctionReads(BWISE_MAIN, BWISE_INSTDIR, paired_readfiles, single_readfile
 		os.chdir(OUT_LOG_FILES)
 		logBloocoo = "logBloocoo"
 		logBloocooToWrite = open(logBloocoo, 'w')
-		os.chdir(BWISE_MAIN)
+		#~ os.chdir(BWISE_MAIN)
 		os.chdir(OUT_DIR)
 		indiceCorrection = 0
 		for indiceCorrection in range(min(nb_correction_steps, len(kmerSizeCorrection))):
@@ -163,10 +163,10 @@ def correctionReads(BWISE_MAIN, BWISE_INSTDIR, paired_readfiles, single_readfile
 				checkWrittenFiles(OUT_DIR + "/reads_corrected1.fa")
 				checkWrittenFiles(OUT_DIR + "/reads_corrected2.fa")
 			else:
-				cmd="ln -fs " + toolsArgs['bloocoo'][fileCase] + " " + OUT_DIR + "/reads_corrected.fa"
+				cmd="ln -fs " + toolsArgs['bloocoo'][fileCase] + " " + OUT_DIR + "/original_reads.fa"
 				printCommand("\t\t\t"+cmd)
 				p = subprocessLauncher(cmd, None, subprocess.DEVNULL)
-				checkWrittenFiles(OUT_DIR + "/reads_corrected.fa")
+				checkWrittenFiles(OUT_DIR + "/original_reads.fa")
 		else:
 			if fileCase == 3:
 				# linking last corrected reads files to reads_corrected1.fa and reads_corrected2.fa
@@ -179,10 +179,10 @@ def correctionReads(BWISE_MAIN, BWISE_INSTDIR, paired_readfiles, single_readfile
 				checkWrittenFiles(OUT_DIR + "/reads_corrected1.fa")
 				checkWrittenFiles(OUT_DIR + "/reads_corrected2.fa")
 			else:
-				cmd="ln -fs " + toolsArgs['bloocoo'][fileCase] + " " + OUT_DIR + "/reads_corrected.fa"
+				cmd="ln -fs " + toolsArgs['bloocoo'][fileCase] + " " + OUT_DIR + "/original_reads.fa"
 				printCommand("\t\t\t"+cmd)
 				p = subprocessLauncher(cmd)
-				checkWrittenFiles(OUT_DIR + "/reads_corrected.fa")
+				checkWrittenFiles(OUT_DIR + "/original_reads.fa")
 
 		print("\n" + getTimestamp() + "--> Correction Done")
 	except SystemExit:	# happens when checkWrittenFiles() returns an error
@@ -213,7 +213,7 @@ def graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 		logBgreatToWrite = open(logBgreat, 'w')
 		logK2000 = "logK2000"
 		logK2000ToWrite = open(logK2000, 'w')
-		os.chdir(BWISE_MAIN)
+		#~ os.chdir(BWISE_MAIN)
 		os.chdir(OUT_DIR)
 		indiceGraph = 1
 		coreUsed = "20" if nb_cores == 0 else str(nb_cores)
@@ -240,24 +240,25 @@ def graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 			p = subprocessLauncher(cmd, logTipsToWrite, logTipsToWrite)
 			checkWrittenFiles(OUT_DIR + "/tipped_out.unitigs.fa")
 			#~ os.remove(OUT_DIR + "/out.unitigs.fa")
-			cmd="rm out.*"
-			printCommand("\t\t\t"+cmd)
-			p = subprocessLauncher(cmd)
+			#~ cmd="rm out.*"
+			#~ printCommand("\t\t\t"+cmd)
+			#~ p = subprocessLauncher(cmd)
 			cmd="mv tipped_out.unitigs.fa dbg" + str(kmerSize) + ".fa"
 			printCommand("\t\t\t"+cmd)
 			p = subprocessLauncher(cmd)
-			cmd="rm out.*"
-			printCommand("\t\t\t"+cmd)
-			p = subprocessLauncher(cmd)
+			for filename in glob.glob(OUT_DIR + "/out.*"):
+				os.remove(filename)
+			for filename in glob.glob(OUT_DIR + "/trashme*"):
+				os.remove(filename)
 
 		if(os.path.isfile(OUT_DIR +"/dbg" + str(kmerSize)+".fa")):
 			# Read Mapping
 			print("\t#Read mapping with BGREAT... ", flush=True)
 			# BGREAT
-			cmd=BWISE_INSTDIR + "/bgreat -k " + str(kmerSize) + "  -u reads_corrected.fa -g dbg" + str(kmerSize) + ".fa -t " + coreUsed + " -a 21 -m "+str(missmatchAllowed)+" -c -O -e "+str(mappingEffort)
+			cmd=BWISE_INSTDIR + "/bgreat -k " + str(kmerSize) + "  -u original_reads.fa -g dbg" + str(kmerSize) + ".fa -t " + coreUsed + " -a 21 -m "+str(missmatchAllowed)+" -c -O -f read_corrected.fa -e "+str(mappingEffort)
 			printCommand("\t\t"+cmd)
 			p = subprocessLauncher(cmd, logBgreatToWrite, logBgreatToWrite)
-			checkWrittenFiles(OUT_DIR + "/paths")
+			checkWrittenFiles(OUT_DIR + "/read_corrected.fa")
 
 		os.chdir(BWISE_MAIN)
 
@@ -391,7 +392,7 @@ def main():
 	paired = '' if paired_readfiles is None else str(paired_readfiles)
 	single = '' if single_readfiles is None else str(single_readfiles)
 	both = paired + "," + single
-	toolsArgs = {'bloocoo':{1: paired + " " , 2:  single + " " , 3: both + " "}, 'bgreat':{1:" -x reads_corrected.fa ", 2: " -u reads_corrected.fa ", 3: " -x reads_corrected1.fa  -u reads_corrected2.fa "}}
+	toolsArgs = {'bloocoo':{1: paired + " " , 2:  single + " " , 3: both + " "}, 'bgreat':{1:" -x original_reads.fa ", 2: " -u original_reads.fa ", 3: " -x reads_corrected1.fa  -u reads_corrected2.fa "}}
 
 
 
@@ -401,10 +402,10 @@ def main():
 		bankBcalm.write(OUT_DIR + "/reads_corrected1.fa\n" + OUT_DIR + "/reads_corrected2.fa\n")
 	elif single_readfiles is None:	# paired end only
 		fileCase = 1
-		bankBcalm.write(OUT_DIR + "/reads_corrected.fa\n")
+		bankBcalm.write(OUT_DIR + "/original_reads.fa\n")
 	else:  # single end only
 		fileCase = 2
-		bankBcalm.write(OUT_DIR + "/reads_corrected.fa\n")
+		bankBcalm.write(OUT_DIR + "/original_reads.fa\n")
 	# bankBcalm.write(OUT_DIR + "lost_unitig.fa")
 	bankBcalm.close()
 
@@ -419,15 +420,23 @@ def main():
 	t = time.time()
 	if(kSize==0):
 	#~ correctionReads(BWISE_MAIN, BWISE_INSTDIR, paired_readfiles, single_readfiles, toolsArgs, fileCase, nb_correction_steps, OUT_DIR, nb_cores, OUT_LOG_FILES)
-		cmd="ln -fs " + single_readfiles + " " + OUT_DIR + "/reads_corrected.fa"
+		#~ os.chdir(BWISE_MAIN)
+		os.chdir(OUT_DIR)
+		cmd="ln -fs " + single_readfiles + " " + OUT_DIR + "/original_reads.fa"
 		printCommand("\t\t\t"+cmd)
 		p = subprocessLauncher(cmd)
 		cmd=BWISE_INSTDIR + "/ntcard -k 21,31,41,51,61,71,81,91,101,111,121 -t "+str(nb_cores)+" -p reads "+single_readfiles
+		#~ cmd=BWISE_INSTDIR + "/ntcard -k 21,31 -t "+str(nb_cores)+" -p reads "+single_readfiles
 		printCommand("\t\t\t"+cmd)
 		p = subprocessLauncher(cmd)
-		cmd=BWISE_INSTDIR + "/badvisor reads "
+		cmd=BWISE_INSTDIR + "/badvisor reads "+str(unitigCoverage)
 		printCommand("\t\t\t"+cmd)
 		kSize = int(subprocess.check_output(cmd, shell=True))
+		for filename in glob.glob(OUT_DIR + "/*.hist"):
+			os.remove(filename)
+		os.chdir(BWISE_MAIN)
+
+
 	print(printTime("Kmer selected : k="+str(kSize), time.time() - t))
 
 
