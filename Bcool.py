@@ -418,13 +418,16 @@ def main():
 	#						   Kmer size selection
 	# ------------------------------------------------------------------------
 	t = time.time()
+	os.chdir(OUT_DIR)
+	cmd="ln -fs " + single_readfiles + " " + OUT_DIR + "/original_reads.fa"
+	printCommand("\t\t\t"+cmd)
+	p = subprocessLauncher(cmd)
+	os.chdir(BWISE_MAIN)
+
 	if(kSize==0):
 	#~ correctionReads(BWISE_MAIN, BWISE_INSTDIR, paired_readfiles, single_readfiles, toolsArgs, fileCase, nb_correction_steps, OUT_DIR, nb_cores, OUT_LOG_FILES)
 		#~ os.chdir(BWISE_MAIN)
 		os.chdir(OUT_DIR)
-		cmd="ln -fs " + single_readfiles + " " + OUT_DIR + "/original_reads.fa"
-		printCommand("\t\t\t"+cmd)
-		p = subprocessLauncher(cmd)
 		cmd=BWISE_INSTDIR + "/ntcard -k 21,31,41,51,61,71,81,91,101,111,121 -t "+str(nb_cores)+" -p reads "+single_readfiles
 		#~ cmd=BWISE_INSTDIR + "/ntcard -k 21,31 -t "+str(nb_cores)+" -p reads "+single_readfiles
 		printCommand("\t\t\t"+cmd)
