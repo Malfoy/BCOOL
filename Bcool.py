@@ -100,107 +100,10 @@ def printWarningMsg(msg):
 
 
 # ############################################################################
-#									Correction fonction using Bloocoo
-# ############################################################################
-
-def correctionReads(BWISE_MAIN, BWISE_INSTDIR, paired_readfiles, single_readfiles, toolsArgs, fileCase, nb_correction_steps, OUT_DIR, nb_cores, OUT_LOG_FILES):
-	try:
-		print("\n" + getTimestamp() + "--> Starting Read Correction with Bloocoo...")
-		slowParameter = " -slow "
-		kmerSizeCorrection = ["31", "63", "95", "127"]
-		bloocooversion = ["32", "64", "128", "128"]
-		os.chdir(OUT_LOG_FILES)
-		logBloocoo = "logBloocoo"
-		logBloocooToWrite = open(logBloocoo, 'w')
-		#~ os.chdir(BWISE_MAIN)
-		os.chdir(OUT_DIR)
-		indiceCorrection = 0
-		for indiceCorrection in range(min(nb_correction_steps, len(kmerSizeCorrection))):
-			#~ logHistoCorr = "histocorr" + str(kmerSizeCorrection[indiceCorrection])
-			#~ logHistoCorrToWrite = open(logHistoCorr, 'w')
-			# Bloocoo
-			cmd=BWISE_INSTDIR + "/Bloocoo" + bloocooversion[indiceCorrection] + " -file " + toolsArgs['bloocoo'][fileCase] + slowParameter + "-kmer-size " + kmerSizeCorrection[indiceCorrection] + " -nbits-bloom 24  -out reads_corrected" + str(indiceCorrection + 1) + ".fa -nb-cores " + str(nb_cores)
-			print("\tCorrection step " + str(indiceCorrection + 1), flush=True)
-			printCommand( "\t\t"+cmd)
-			p = subprocessLauncher(cmd, logBloocooToWrite, logBloocooToWrite)
-			# Deal with files after Bloocoo
-
-			#TODO=put back the histogram creation
-			# cmd=BWISE_INSTDIR + "/h5dump -y -d histogram_"+kmerSizeCorrection[indiceCorrection]+" reads_corrected" + str(indiceCorrection + 1) + ".fa.h5"
-			# print("\t\t"+cmd)
-			# p = subprocessLauncher(cmd, logHistoCorrToWrite, logHistoCorrToWrite)
-			checkWrittenFiles(OUT_DIR + "/reads_corrected" + str(indiceCorrection + 1) + ".fa.h5")
-			os.remove(OUT_DIR + "/reads_corrected" + str(indiceCorrection + 1) + ".fa.h5")
-			# if (indiceCorrection > 0):
-			#	  cmd="rm -f " + OUT_DIR + "/reads_corrected" + str(indiceCorrection) + "* "
-			#	  print("\t\t\t"+cmd)
-			#	  p = subprocessLauncher(cmd, None, logHistoCorrToWrite)
-			if fileCase == 3:
-				cmd="mv reads_corrected" + str(indiceCorrection + 1) + "_0_.fasta reads_corrected" + str(indiceCorrection + 1) + "1.fa "
-				printCommand("\t\t\t"+cmd)
-				p = subprocessLauncher(cmd)
-				p = subprocessLauncher("mv reads_corrected" + str(indiceCorrection + 1) + "_1_.fasta reads_corrected" + str(indiceCorrection + 1) + "2.fa ")
-				checkWrittenFiles(OUT_DIR + "/reads_corrected" + str(indiceCorrection + 1) + "1.fa")
-				checkWrittenFiles(OUT_DIR + "/reads_corrected" + str(indiceCorrection + 1) + "2.fa")
-				toolsArgs['bloocoo'][fileCase] = OUT_DIR + "/reads_corrected" + str(indiceCorrection + 1) + "1.fa," + OUT_DIR + "/reads_corrected" + str(indiceCorrection + 1) + "2.fa"
-			else:
-				checkWrittenFiles(OUT_DIR + "/reads_corrected" + str(indiceCorrection + 1) + ".fa")
-				toolsArgs['bloocoo'][fileCase] = OUT_DIR + "/reads_corrected" + str(indiceCorrection + 1) + ".fa "
-			#~ logHistoCorrToWrite.close()
-			#~ checkWrittenFiles(OUT_DIR + "/histocorr" + str(kmerSizeCorrection[indiceCorrection]))
-
-		os.chdir(BWISE_MAIN)
-		# links and file check
-		if nb_correction_steps == 0:
-			if fileCase == 3:
-				# no correction : linking raw read files to reads_corrected1.fa and reads_corrected2.fa
-				cmd="ln -fs " + paired_readfiles + " " + OUT_DIR + "/reads_corrected1.fa"
-				printCommand("\t\t\t"+cmd)
-				p = subprocessLauncher(cmd, None, subprocess.DEVNULL)
-				cmd="ln -fs " + single_readfiles + " " + OUT_DIR + "/reads_corrected2.fa"
-				printCommand("\t\t\t"+cmd)
-				p = subprocessLauncher(cmd, None, subprocess.DEVNULL)
-				checkWrittenFiles(OUT_DIR + "/reads_corrected1.fa")
-				checkWrittenFiles(OUT_DIR + "/reads_corrected2.fa")
-			else:
-				cmd="ln -fs " + toolsArgs['bloocoo'][fileCase] + " " + OUT_DIR + "/original_reads.fa"
-				printCommand("\t\t\t"+cmd)
-				p = subprocessLauncher(cmd, None, subprocess.DEVNULL)
-				checkWrittenFiles(OUT_DIR + "/original_reads.fa")
-		else:
-			if fileCase == 3:
-				# linking last corrected reads files to reads_corrected1.fa and reads_corrected2.fa
-				cmd="ln -fs " + OUT_DIR + "/reads_corrected" + str(indiceCorrection + 1) + "1.fa " + OUT_DIR + "/reads_corrected1.fa"
-				printCommand("\t\t\t"+cmd)
-				p = subprocessLauncher(cmd, None, subprocess.DEVNULL)
-				cmd="ln -fs " + OUT_DIR + "/reads_corrected" + str(indiceCorrection + 1) + "2.fa " + OUT_DIR + "/reads_corrected2.fa"
-				printCommand("\t\t\t"+cmd)
-				p = subprocessLauncher(cmd, None, subprocess.DEVNULL)
-				checkWrittenFiles(OUT_DIR + "/reads_corrected1.fa")
-				checkWrittenFiles(OUT_DIR + "/reads_corrected2.fa")
-			else:
-				cmd="ln -fs " + toolsArgs['bloocoo'][fileCase] + " " + OUT_DIR + "/original_reads.fa"
-				printCommand("\t\t\t"+cmd)
-				p = subprocessLauncher(cmd)
-				checkWrittenFiles(OUT_DIR + "/original_reads.fa")
-
-		print("\n" + getTimestamp() + "--> Correction Done")
-	except SystemExit:	# happens when checkWrittenFiles() returns an error
-		sys.exit(1);
-	except KeyboardInterrupt:
-		sys.exit(1);
-	except:
-		print("Unexpected error during read correction:", sys.exc_info()[0])
-		dieToFatalError('')
-
-
-
-
-# ############################################################################
 #			   graph generation with BCALM + BTRIM + BGREAT
 # ############################################################################
 
-def graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, fileBcalm, kmerSize, solidity, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed, OUT_LOG_FILES):
+def graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, fileBcalm, kmerSize, solidity, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed,aSize, OUT_LOG_FILES):
 	try:
 		inputBcalm=fileBcalm
 		print("\n" + getTimestamp() + "--> Building the graph...",flush=True)
@@ -255,7 +158,7 @@ def graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 			# Read Mapping
 			print("\t#Read mapping with BGREAT... ", flush=True)
 			# BGREAT
-			cmd=BWISE_INSTDIR + "/bgreat -k " + str(kmerSize) + "  -u original_reads.fa -g dbg" + str(kmerSize) + ".fa -t " + coreUsed + " -a 21 -m "+str(missmatchAllowed)+" -c -O -f read_corrected.fa -e "+str(mappingEffort)
+			cmd=BWISE_INSTDIR + "/bgreat -k " + str(kmerSize) + "  -u original_reads.fa -g dbg" + str(kmerSize) + ".fa -t " + coreUsed + " -a "+str(aSize)+" -m "+str(missmatchAllowed)+" -c -O -f read_corrected.fa -e "+str(mappingEffort)
 			printCommand("\t\t"+cmd)
 			p = subprocessLauncher(cmd, logBgreatToWrite, logBgreatToWrite)
 			checkWrittenFiles(OUT_DIR + "/read_corrected.fa")
@@ -295,13 +198,13 @@ def main():
 	# ------------------------------------------------------------------------
 	parser.add_argument("-u", action="store", dest="single_readfiles",		type=str,					help="input fasta read files. Several read files must be concatenated.")
 	parser.add_argument('-s', action="store", dest="min_cov",				type=int,	default = 2,	help="an integer, k-mers present strictly less than this number of times in the dataset will be discarded (default 2)")
+	parser.add_argument('-S', action="store", dest="unitig_Coverage",				type=int,	default = 5,	help="unitig Coverage for  cleaning (default 5)")
 	parser.add_argument('-o', action="store", dest="out_dir",				type=str,	default=os.getcwd(),	help="path to store the results (default = current directory)")
-	parser.add_argument('-k', action="store", dest="kSize",					type=int,	default = 0,	help="an integer,  k-mer size (default 63)")
-	parser.add_argument('-c', action="store", dest="nb_correction",	type=int,	default = 0,	help="an integer, number of steps of read correction (default 0)")
+	parser.add_argument('-k', action="store", dest="kSize",					type=int,	default = 0,	help="an integer,  k-mer size (default AUTO)")
+	parser.add_argument('-a', action="store", dest="aSize",	type=int,	default = 41,	help="an integer, Size of the anchor to use (default 41)")
 	parser.add_argument('-t', action="store", dest="nb_cores",				type=int,	default = 0,	help="number of cores used (default max)")
-	parser.add_argument('-e', action="store", dest="mapping_Effort",				type=int,	default = 100,	help="Anchors to test for mapping (default 100)")
-	parser.add_argument('-C', action="store", dest="unitig_Coverage",				type=int,	default = 5,	help="unitigCoverage for first cleaning (default 5)")
-	parser.add_argument('-m', action="store", dest="missmatch_allowed",				type=int,	default = 10,	help="missmatch allowed in mapping (default 2)")
+	parser.add_argument('-e', action="store", dest="mapping_Effort",				type=int,	default = 1000,	help="Anchors to test for mapping ")
+	parser.add_argument('-m', action="store", dest="missmatch_allowed",				type=int,	default = 10,	help="missmatch allowed in mapping (default 10)")
 	parser.add_argument('--version', action='version', version='%(prog)s 0.0.1')
 
 
@@ -321,14 +224,11 @@ def main():
 	# ------------------------------------------------------------------------
 	kSize				= options.kSize
 	min_cov				= options.min_cov
-	nb_correction_steps = options.nb_correction
+	aSize = options.aSize
 	nb_cores			= options.nb_cores
 	mappingEffort		= options.mapping_Effort
 	unitigCoverage		= options.unitig_Coverage
 	missmatchAllowed		= options.missmatch_allowed
-
-	if nb_correction_steps > 4:
-		dieToFatalError("Please use value <= 4 for correction steps.")
 
 	# ------------------------------------------------------------------------
 	#				Create output dir and log files
@@ -346,7 +246,7 @@ def main():
 		outName = OUT_DIR.split("/")[-1]
 		OUT_DIR = os.path.dirname(os.path.realpath(OUT_DIR)) + "/" + outName
 		parametersLog = open(OUT_DIR + "/ParametersUsed.txt", 'w');
-		parametersLog.write("kSize:%s	k-mer_solidity:%s	unitig_solidity:%s	correction_steps:%s	mapping_effort:%s	missmatch_allowed:%s\n " %(kSize, min_cov, unitigCoverage,nb_correction_steps, mappingEffort,missmatchAllowed))
+		parametersLog.write("kSize:%s	k-mer_solidity:%s	unitig_solidity:%s	aSize:%s	mapping_effort:%s	missmatch_allowed:%s\n " %(kSize, min_cov, unitigCoverage,aSize, mappingEffort,missmatchAllowed))
 		parametersLog.close()
 
 		print("Results will be stored in: ", OUT_DIR)
@@ -447,7 +347,7 @@ def main():
 	#						   Graph construction and cleaning
 	# ------------------------------------------------------------------------
 	t = time.time()
-	valuesGraph = graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, "bankBcalm.txt", kSize, min_cov, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed, OUT_LOG_FILES)
+	valuesGraph = graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, "bankBcalm.txt", kSize, min_cov, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed,aSize, OUT_LOG_FILES)
 	print(printTime("Correction took: ", time.time() - t))
 
 
