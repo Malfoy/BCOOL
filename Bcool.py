@@ -19,8 +19,8 @@ from subprocess import Popen, PIPE, STDOUT
 
 # ***************************************************************************
 #
-#							   Bwise:
-#				 High order De Bruijn graph assembler
+#							   Bcool:
+#				 Short reads corrector de Bruijn graph based
 #
 #
 #
@@ -42,7 +42,7 @@ def getPlatform():
 	elif sys.platform == "darwin":
 		return "OSX"
 	else:
-		print("[ERROR] BWISE is not compatible with Windows.")
+		print("[ERROR] BCOOL is not compatible with Windows.")
 		sys.exit(1);
 
 
@@ -65,7 +65,7 @@ def checkReadFiles(readfiles):
 		dieToFatalError("One or more read files do not exist.")
 
 
-# check if files written by BWISE are present
+# check if files written by BCOOL are present
 def checkWrittenFiles(files):
 	allFilesAreOK = True
 	if not os.path.isfile(files):
@@ -79,7 +79,7 @@ def checkWrittenFiles(files):
 # to return if an error makes the run impossible
 def dieToFatalError (msg):
   print("[FATAL ERROR] " + msg)
-  print("Try `Bwise --help` for more information")
+  print("Try `BCOOL --help` for more information")
   sys.exit(1);
 
 
@@ -103,7 +103,7 @@ def printWarningMsg(msg):
 #			   graph generation with BCALM + BTRIM + BGREAT
 # ############################################################################
 
-def graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, fileBcalm, kmerSize, solidity, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed,aSize, OUT_LOG_FILES):
+def graphConstruction(BCOOL_MAIN, BCOOL_INSTDIR, OUT_DIR, fileBcalm, kmerSize, solidity, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed,aSize, OUT_LOG_FILES):
 	try:
 		inputBcalm=fileBcalm
 		print("\n" + getTimestamp() + "--> Building the graph...",flush=True)
@@ -116,7 +116,7 @@ def graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 		logBgreatToWrite = open(logBgreat, 'w')
 		logK2000 = "logK2000"
 		logK2000ToWrite = open(logK2000, 'w')
-		#~ os.chdir(BWISE_MAIN)
+		#~ os.chdir(BCOOL_MAIN)
 		os.chdir(OUT_DIR)
 		indiceGraph = 1
 		coreUsed = "20" if nb_cores == 0 else str(nb_cores)
@@ -126,7 +126,7 @@ def graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 		else:
 			print("\t#Graph  dbg" + str(kmerSize)+".fa: Construction... ", flush=True)
 			# BCALM
-			cmd=BWISE_INSTDIR + "/bcalm -max-memory 10000 -in " + OUT_DIR + "/" + inputBcalm + " -kmer-size " + str(kmerSize) + " -abundance-min " + str(solidity) + " -out " + OUT_DIR + "/out " + " -nb-cores " + coreUsed
+			cmd=BCOOL_INSTDIR + "/bcalm -max-memory 10000 -in " + OUT_DIR + "/" + inputBcalm + " -kmer-size " + str(kmerSize) + " -abundance-min " + str(solidity) + " -out " + OUT_DIR + "/out " + " -nb-cores " + coreUsed
 
 			printCommand( "\t\t"+cmd)
 			p = subprocessLauncher(cmd, logBcalmToWrite, logBcalmToWrite)
@@ -136,9 +136,9 @@ def graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 			print("\t\t #Graph cleaning... ", flush=True)
 			# BTRIM
 			if(solidity == 1):
-				cmd=BWISE_INSTDIR + "/btrim out.unitigs.fa "+str(kmerSize)+" "+str(2*int(kmerSize-1))+" "+coreUsed+" 8"
+				cmd=BCOOL_INSTDIR + "/btrim out.unitigs.fa "+str(kmerSize)+" "+str(2*int(kmerSize-1))+" "+coreUsed+" 8"
 			else:
-				cmd=BWISE_INSTDIR + "/btrim out.unitigs.fa "+str(kmerSize)+" "+str(2*int(kmerSize-1))+" "+coreUsed+" 8 "+str(unitigCoverage)
+				cmd=BCOOL_INSTDIR + "/btrim out.unitigs.fa "+str(kmerSize)+" "+str(2*int(kmerSize-1))+" "+coreUsed+" 8 "+str(unitigCoverage)
 			printCommand("\t\t\t"+cmd)
 			p = subprocessLauncher(cmd, logTipsToWrite, logTipsToWrite)
 			checkWrittenFiles(OUT_DIR + "/tipped_out.unitigs.fa")
@@ -158,12 +158,12 @@ def graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 			# Read Mapping
 			print("\t#Read mapping with BGREAT... ", flush=True)
 			# BGREAT
-			cmd=BWISE_INSTDIR + "/bgreat -k " + str(kmerSize) + "  -u original_reads.fa -g dbg" + str(kmerSize) + ".fa -t " + coreUsed + " -a "+str(aSize)+" -m "+str(missmatchAllowed)+" -c -O -f read_corrected.fa -e "+str(mappingEffort)
+			cmd=BCOOL_INSTDIR + "/bgreat -k " + str(kmerSize) + "  -u original_reads.fa -g dbg" + str(kmerSize) + ".fa -t " + coreUsed + " -a "+str(aSize)+" -m "+str(missmatchAllowed)+" -c -O -f read_corrected.fa -e "+str(mappingEffort)
 			printCommand("\t\t"+cmd)
 			p = subprocessLauncher(cmd, logBgreatToWrite, logBgreatToWrite)
 			checkWrittenFiles(OUT_DIR + "/read_corrected.fa")
 
-		os.chdir(BWISE_MAIN)
+		os.chdir(BCOOL_MAIN)
 
 		print(getTimestamp() + "--> Done!")
 		return {'indiceGraph': indiceGraph, 'kmerSize': kmerSize}
@@ -184,14 +184,14 @@ def main():
 
 	wholeT = time.time()
 	print("\n*** This is Bcool - de Bruin graph based corrector  ***\n")
-	BWISE_MAIN = os.path.dirname(os.path.realpath(__file__))
-	BWISE_INSTDIR =	 BWISE_MAIN + "/bin"  # todo : change using getPlatform()
-	print("Binaries are in: " + BWISE_INSTDIR)
+	BCOOL_MAIN = os.path.dirname(os.path.realpath(__file__))
+	BCOOL_INSTDIR =	 BCOOL_MAIN + "/bin"  # todo : change using getPlatform()
+	print("Binaries are in: " + BCOOL_INSTDIR)
 
 	# ========================================================================
 	#						 Manage command line arguments
 	# ========================================================================
-	parser = argparse.ArgumentParser(description='Bwise - High order De Bruijn graph assembler ')
+	parser = argparse.ArgumentParser(description='BCOOL - De Bruijn graph based read corrector ')
 
 	# ------------------------------------------------------------------------
 	#							 Define allowed options
@@ -238,7 +238,7 @@ def main():
 		if not os.path.exists(OUT_DIR):
 			os.mkdir(OUT_DIR)
 		else:
-			printWarningMsg(OUT_DIR + " directory already exists, BWISE will use it.")
+			printWarningMsg(OUT_DIR + " directory already exists, BCOOL will use it.")
 
 		OUT_LOG_FILES = OUT_DIR + "/logs"
 		if not os.path.exists(OUT_LOG_FILES):
@@ -285,7 +285,7 @@ def main():
 
 	if errorReadFile:
 		parser.print_usage()
-		dieToFatalError("BWISE requires at least a read file")
+		dieToFatalError("Bcool requires at least a read file")
 
 	bloocooArg = ""
 	bgreatArg = ""
@@ -322,22 +322,26 @@ def main():
 	cmd="ln -fs " + single_readfiles + " " + OUT_DIR + "/original_reads.fa"
 	printCommand("\t\t\t"+cmd)
 	p = subprocessLauncher(cmd)
-	os.chdir(BWISE_MAIN)
+	os.chdir(BCOOL_MAIN)
 
 	if(kSize==0):
-	#~ correctionReads(BWISE_MAIN, BWISE_INSTDIR, paired_readfiles, single_readfiles, toolsArgs, fileCase, nb_correction_steps, OUT_DIR, nb_cores, OUT_LOG_FILES)
-		#~ os.chdir(BWISE_MAIN)
+	#~ correctionReads(BCOOL_MAIN, BCOOL_INSTDIR, paired_readfiles, single_readfiles, toolsArgs, fileCase, nb_correction_steps, OUT_DIR, nb_cores, OUT_LOG_FILES)
+		#~ os.chdir(BCOOL_MAIN)
 		os.chdir(OUT_DIR)
-		cmd=BWISE_INSTDIR + "/ntcard -k 21,31,41,51,61,71,81,91,101,111,121 -t "+str(nb_cores)+" -p reads "+single_readfiles
-		#~ cmd=BWISE_INSTDIR + "/ntcard -k 21,31 -t "+str(nb_cores)+" -p reads "+single_readfiles
+		cmd=BCOOL_INSTDIR + "/ntcard -k 21,31,41,51,61,71,81,91,101,111,121,131,141 -t "+str(nb_cores)+" -p reads "+single_readfiles
+		#~ cmd=BCOOL_INSTDIR + "/ntcard -k 21,31 -t "+str(nb_cores)+" -p reads "+single_readfiles
 		printCommand("\t\t\t"+cmd)
 		p = subprocessLauncher(cmd)
-		cmd=BWISE_INSTDIR + "/badvisor reads "+str(unitigCoverage)
+		cmd=BCOOL_INSTDIR + "/badvisor reads "+str(unitigCoverage)
 		printCommand("\t\t\t"+cmd)
 		kSize = int(subprocess.check_output(cmd, shell=True))
+		if kSize<21:
+			print("\nWARNING : I could not determine a good kmer size sorry :( \n")
+			print("I try with k=21 anyway...\n")
+			kSize=21
 		for filename in glob.glob(OUT_DIR + "/*.hist"):
 			os.remove(filename)
-		os.chdir(BWISE_MAIN)
+		os.chdir(BCOOL_MAIN)
 
 
 	print(printTime("Kmer selected : k="+str(kSize), time.time() - t))
@@ -347,7 +351,7 @@ def main():
 	#						   Graph construction and cleaning
 	# ------------------------------------------------------------------------
 	t = time.time()
-	valuesGraph = graphConstruction(BWISE_MAIN, BWISE_INSTDIR, OUT_DIR, "bankBcalm.txt", kSize, min_cov, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed,aSize, OUT_LOG_FILES)
+	valuesGraph = graphConstruction(BCOOL_MAIN, BCOOL_INSTDIR, OUT_DIR, "bankBcalm.txt", kSize, min_cov, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed,aSize, OUT_LOG_FILES)
 	print(printTime("Correction took: ", time.time() - t))
 
 
