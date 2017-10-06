@@ -135,7 +135,7 @@ def graphConstruction(BCOOL_MAIN, BCOOL_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 			#  Graph Cleaning
 			print("\t\t #Graph cleaning... ", flush=True)
 			# BTRIM
-			cmd=BCOOL_INSTDIR + "/btrim -u out.unitigs.fa -k "+str(kmerSize)+" -t "+str(2*int(kmerSize-1))+" -c "+coreUsed+" -h  8 -h "+str(unitigCoverage)
+			cmd=BCOOL_INSTDIR + "/btrim -u out.unitigs.fa -k "+str(kmerSize)+" -t "+str(2*int(kmerSize-1))+" -c "+coreUsed+" -h  8 -f "+str(unitigCoverage)
 			printCommand("\t\t\t"+cmd)
 			p = subprocessLauncher(cmd, logTipsToWrite, logTipsToWrite)
 			checkWrittenFiles(OUT_DIR + "/tipped_out.unitigs.fa")
