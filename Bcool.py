@@ -325,10 +325,30 @@ def main():
 	#~ correctionReads(BCOOL_MAIN, BCOOL_INSTDIR, paired_readfiles, single_readfiles, toolsArgs, fileCase, nb_correction_steps, OUT_DIR, nb_cores, OUT_LOG_FILES)
 		#~ os.chdir(BCOOL_MAIN)
 		os.chdir(OUT_DIR)
-		cmd=BCOOL_INSTDIR + "/ntcard -k 21,31,41,51,61,71,81,91,101,111,121,131,141 -t "+str(nb_cores)+" -p reads "+single_readfiles
+		commands=[
+		BCOOL_INSTDIR + "/ntcard -k 21 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 31 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 41 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 51 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 61 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 71 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 81 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 91 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 101 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 111 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 121 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 131 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 141 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 151 -p reads "+single_readfiles
+		]
 		#~ cmd=BCOOL_INSTDIR + "/ntcard -k 21,31 -t "+str(nb_cores)+" -p reads "+single_readfiles
-		printCommand("\t\t\t"+cmd)
-		p = subprocessLauncher(cmd)
+		#~ printCommand("\t\t\t"+cmd)
+		#~ p = subprocessLauncher(cmd)
+
+		procs = [ Popen(i,shell=True) for i in commands ]
+		for p in procs:
+		   p.wait()
+
 		cmd=BCOOL_INSTDIR + "/badvisor reads "+str(unitigCoverage)
 		printCommand("\t\t\t"+cmd)
 		kSize = int(subprocess.check_output(cmd, shell=True))
