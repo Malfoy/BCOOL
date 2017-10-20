@@ -219,11 +219,11 @@ def main():
 		else:
 			printWarningMsg(OUT_DIR + " directory already exists, BCOOL will use it.")
 
+		outName = OUT_DIR.split("/")[-1]
+		OUT_DIR = os.path.dirname(os.path.realpath(OUT_DIR)) + "/" + outName
 		OUT_LOG_FILES = OUT_DIR + "/logs"
 		if not os.path.exists(OUT_LOG_FILES):
 			os.mkdir(OUT_LOG_FILES)
-		outName = OUT_DIR.split("/")[-1]
-		OUT_DIR = os.path.dirname(os.path.realpath(OUT_DIR)) + "/" + outName
 		parametersLog = open(OUT_DIR + "/ParametersUsed.txt", 'w');
 		parametersLog.write("kSize:%s	k-mer_solidity:%s	unitig_solidity:%s	aSize:%s	mapping_effort:%s	missmatch_allowed:%s\n " %(kSize, min_cov, unitigCoverage,aSize, mappingEffort,missmatchAllowed))
 		parametersLog.close()
