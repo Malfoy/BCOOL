@@ -66,48 +66,48 @@ chmod +x Bcool.py
 
 
 
-#~ git clone --recursive https://github.com/bcgsc/ntCard >>logCompile 2>>logCompile;
-#~ cd ntCard;
-#~ ./autogen.sh >>logCompile 2>>logCompile;
-#~ ./configure CFLAGS='-g -O3' CXXFLAGS='-g -O3' >>logCompile 2>>logCompile;
-#~ make -j $threadNumber >>logCompile 2>>logCompile;
-#~ cp ntcard $folder;
-#~ cd ..;
-#~ echo PHASE ONE, kmer spectrum estimator ntcard;
+git clone --recursive https://github.com/bcgsc/ntCard >>logCompile 2>>logCompile;
+cd ntCard;
+./autogen.sh >>logCompile 2>>logCompile;
+./configure CFLAGS='-g -O3' CXXFLAGS='-g -O3' >>logCompile 2>>logCompile;
+make -j $threadNumber >>logCompile 2>>logCompile;
+cp ntcard $folder;
+cd ..;
+echo PHASE ONE, kmer spectrum estimator ntcard;
 
 
 
-#~ git clone --recursive https://github.com/GATB/bcalm >>logCompile 2>>logCompile;
-#~ cd bcalm;
-#~ mkdir build; cd build;
-#~ cmake -DKSIZE_LIST="32 64 128 256" ..  >>logCompile 2>>logCompile;
-#~ make -j $threadNumber >>logCompile 2>>logCompile;
-#~ cp bcalm $folder;
-#~ cd ../..;
-#~ echo PHASE TWO, GRAPH CONSTRUCTION: BCALM;
+git clone --recursive https://github.com/GATB/bcalm >>logCompile 2>>logCompile;
+cd bcalm;
+mkdir build; cd build;
+cmake -DKSIZE_LIST="32 64 128 256" ..  >>logCompile 2>>logCompile;
+make -j $threadNumber >>logCompile 2>>logCompile;
+cp bcalm $folder;
+cd ../..;
+echo PHASE TWO, GRAPH CONSTRUCTION: BCALM;
 
 
 
-#~ git clone https://github.com/Malfoy/BGREAT2 >>logCompile 2>>logCompile;
-#~ cd BGREAT2;
-#~ make -j $threadNumber >>logCompile 2>>logCompile;
-#~ cp bgreat $folder;
-#~ cd ..;
-#~ echo PHASE THREE, READ MAPPING ON THE DBG: BGREAT;
+git clone https://github.com/Malfoy/BGREAT2 >>logCompile 2>>logCompile;
+cd BGREAT2;
+make -j $threadNumber >>logCompile 2>>logCompile;
+cp bgreat $folder;
+cd ..;
+echo PHASE THREE, READ MAPPING ON THE DBG: BGREAT;
 
 
-#~ git clone https://github.com/Malfoy/BTRIM >>logCompile 2>>logCompile;
-#~ cd BTRIM;
-#~ make -j $threadNumber >>logCompile 2>>logCompile;
-#~ if [ $? -ne 0 ]
-       #~ then
-              #~ echo "there was a problem with btrim compilation, check logs"
-              #~ exit 1
-       #~ fi
-#~ cp btrim $folder;
-#~ cp badvisor $folder;
-#~ cd ..;
-#~ echo PHASE FOUR GRAPH CLEANING: BTRIM;
+git clone https://github.com/Malfoy/BTRIM >>logCompile 2>>logCompile;
+cd BTRIM;
+make -j $threadNumber >>logCompile 2>>logCompile;
+if [ $? -ne 0 ]
+       then
+              echo "there was a problem with btrim compilation, check logs"
+              exit 1
+       fi
+cp btrim $folder;
+cp badvisor $folder;
+cd ..;
+echo PHASE FOUR GRAPH CLEANING: BTRIM;
 
 
 
