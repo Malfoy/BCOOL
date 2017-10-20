@@ -304,6 +304,7 @@ def main():
 	os.chdir(BCOOL_MAIN)
 
 	if(kSize==0):
+		print("No kmer size selected, launching kmer spctrum analysis with Ntcard \n")
 	#~ correctionReads(BCOOL_MAIN, BCOOL_INSTDIR, paired_readfiles, single_readfiles, toolsArgs, fileCase, nb_correction_steps, OUT_DIR, nb_cores, OUT_LOG_FILES)
 		#~ os.chdir(BCOOL_MAIN)
 		os.chdir(OUT_DIR)
@@ -331,7 +332,7 @@ def main():
 		for p in procs:
 		   p.wait()
 
-		cmd=BCOOL_INSTDIR + "/badvisor reads "+str(unitigCoverage)
+		cmd=BCOOL_INSTDIR + "/badvisor reads "+str(unitigCoverage)+" 1.3"
 		printCommand("\t\t\t"+cmd)
 		kSize = int(subprocess.check_output(cmd, shell=True))
 		if kSize<21:
