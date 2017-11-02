@@ -118,15 +118,15 @@ def graphConstruction(BCOOL_MAIN, BCOOL_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 			#  Graph Cleaning
 			print("\t\t #Graph cleaning... ", flush=True)
 			# BTRIM
-			cmd=BCOOL_INSTDIR + "/btrim -u out.unitigs.fa -k "+str(kmerSize)+" -t "+str(2*int(kmerSize-1))+" -T 3 -c "+coreUsed+" -h  8 -f "+str(unitigCoverage)
+			cmd=BCOOL_INSTDIR + "/btrim -u out.unitigs.fa -k "+str(kmerSize)+" -t "+str(2*int(kmerSize-1))+" -T 3 -c "+coreUsed+" -o dbg"+str(kmerSize)+".fa -h  8 -f "+str(unitigCoverage)
 			printCommand("\t\t\t"+cmd)
 			p = subprocessLauncher(cmd, logTipsToWrite, logTipsToWrite)
-			checkWrittenFiles(OUT_DIR + "/tipped_out.unitigs.fa")
+			#~ checkWrittenFiles(OUT_DIR + "/tipped_out.unitigs.fa")
 			#~ os.remove(OUT_DIR + "/out.unitigs.fa")
 			#~ cmd="rm out.*"
 			#~ printCommand("\t\t\t"+cmd)
 			#~ p = subprocessLauncher(cmd)
-			cmd="mv tipped_out.unitigs.fa dbg" + str(kmerSize) + ".fa"
+			#~ cmd="mv tipped_out.unitigs.fa dbg" + str(kmerSize) + ".fa"
 			printCommand("\t\t\t"+cmd)
 			p = subprocessLauncher(cmd)
 			for filename in glob.glob(OUT_DIR + "/out.*"):
