@@ -127,8 +127,8 @@ def graphConstruction(BCOOL_MAIN, BCOOL_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 			#~ printCommand("\t\t\t"+cmd)
 			#~ p = subprocessLauncher(cmd)
 			#~ cmd="mv tipped_out.unitigs.fa dbg" + str(kmerSize) + ".fa"
-			printCommand("\t\t\t"+cmd)
-			p = subprocessLauncher(cmd)
+			#~ printCommand("\t\t\t"+cmd)
+			#~ p = subprocessLauncher(cmd)
 			for filename in glob.glob(OUT_DIR + "/out.*"):
 				os.remove(filename)
 			for filename in glob.glob(OUT_DIR + "/trashme*"):
@@ -138,10 +138,10 @@ def graphConstruction(BCOOL_MAIN, BCOOL_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 			# Read Mapping
 			print("\t#Read mapping with BGREAT... ", flush=True)
 			# BGREAT
-			cmd=BCOOL_INSTDIR + "/bgreat -k " + str(kmerSize) + "  -u original_reads.fa -g dbg" + str(kmerSize) + ".fa -t " + coreUsed + " -a "+str(aSize)+" -m "+str(missmatchAllowed)+" -c -O -f read_corrected.fa -e "+str(mappingEffort)
+			cmd=BCOOL_INSTDIR + "/bgreat -k " + str(kmerSize) + "  -u original_reads.fa -g dbg" + str(kmerSize) + ".fa -t " + coreUsed + " -a "+str(aSize)+" -m "+str(missmatchAllowed)+" -c -O -f reads_corrected.fa -e "+str(mappingEffort)
 			printCommand("\t\t"+cmd)
 			p = subprocessLauncher(cmd, logBgreatToWrite, logBgreatToWrite)
-			checkWrittenFiles(OUT_DIR + "/read_corrected.fa")
+			checkWrittenFiles(OUT_DIR + "/reads_corrected.fa")
 
 		os.chdir(BCOOL_MAIN)
 
