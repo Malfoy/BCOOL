@@ -299,7 +299,8 @@ def main():
 
 	if errorReadFile:
 		parser.print_help()
-		dieToFatalError("Bcool requires at least a read file")
+		print("Bcool need a need file to correct...")
+		sys.exit(0)
 
 	bloocooArg = ""
 	bgreatArg = ""
