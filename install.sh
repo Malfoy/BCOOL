@@ -32,7 +32,7 @@ f)
 echo "use folder: $OPTARG" >&2
 folder=$OPTARG
 ;;
-s)
+t)
 echo "use  $OPTARG threads" >&2
 threadNumber=$OPTARG
 ;;
@@ -58,11 +58,11 @@ mkdir $folder;
 echo "I put binaries in $folder";
 
 
-cat Bcool_header.py>Bcool.py
-echo "BCOOL_INSTDIR = (\"$folder\")" >> Bcool.py
-cat Bcool_broken.py>>Bcool.py
-chmod +x Bcool.py
-
+cat src/Bcool_header.py>Bcool
+echo "BCOOL_INSTDIR = (\"$folder\")" >> Bcool
+cat src/Bcool_broken.py>>Bcool
+chmod +x Bcool
+cd src;
 
 
 
@@ -108,6 +108,7 @@ cp btrim $folder;
 cp badvisor $folder;
 cd ..;
 echo PHASE FOUR GRAPH CLEANING: BTRIM;
+cd ..;
 
 
 

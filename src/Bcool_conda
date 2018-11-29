@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 import os
 import re
 import sys
 import time
-import shlex, subprocess, glob
+import shlex, subprocess
 import struct
 import shutil
 import os.path
@@ -13,9 +12,12 @@ import tempfile
 import argparse
 import threading
 import multiprocessing
+import glob
 # from random import randint
 from operator import itemgetter
 from subprocess import Popen, PIPE, STDOUT
+
+
 
 # ***************************************************************************
 #
@@ -27,12 +29,16 @@ from subprocess import Popen, PIPE, STDOUT
 # ***************************************************************************
 
 # ############################################################################
-#									Utils functions
-# ############################################################################
+
+
+
+debug_mode=0
+
+
 
 
 def printCommand(cmd,pc=True):
-	if pc:
+	if (pc and debug_mode!=0):
 		print(cmd,flush=True)
 
 # get the platform
@@ -103,7 +109,7 @@ def printWarningMsg(msg):
 #			   graph generation with BCALM + BTRIM + BGREAT
 # ############################################################################
 
-def graphConstruction(BCOOL_MAIN, BCOOL_INSTDIR, OUT_DIR, fileBcalm, kmerSize, solidity, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed,aSize, OUT_LOG_FILES):
+def graphConstruction(BCOOL_MAIN, OUT_DIR, fileBcalm, kmerSize, solidity, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed,aSize,maximumOccurence,subsambleAnchor, OUT_LOG_FILES):
 	try:
 		inputBcalm=fileBcalm
 		print("\n" + getTimestamp() + "--> Building the graph...",flush=True)
@@ -126,7 +132,7 @@ def graphConstruction(BCOOL_MAIN, BCOOL_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 		else:
 			print("\t#Graph  dbg" + str(kmerSize)+".fa: Construction... ", flush=True)
 			# BCALM
-			cmd=BCOOL_INSTDIR + "/bcalm -max-memory 10000 -in " + OUT_DIR + "/" + inputBcalm + " -kmer-size " + str(kmerSize) + " -abundance-min " + str(solidity) + " -out " + OUT_DIR + "/out " + " -nb-cores " + coreUsed
+			cmd="bcalm -max-memory 10000 -in " + OUT_DIR + "/" + inputBcalm + " -kmer-size " + str(kmerSize) + " -abundance-min " + str(solidity) + " -out " + OUT_DIR + "/out " + " -nb-cores " + coreUsed
 
 			printCommand( "\t\t"+cmd)
 			p = subprocessLauncher(cmd, logBcalmToWrite, logBcalmToWrite)
@@ -135,17 +141,17 @@ def graphConstruction(BCOOL_MAIN, BCOOL_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 			#  Graph Cleaning
 			print("\t\t #Graph cleaning... ", flush=True)
 			# BTRIM
-			cmd=BCOOL_INSTDIR + "/btrim -u out.unitigs.fa -k "+str(kmerSize)+" -t "+str(2*int(kmerSize-1))+" -c "+coreUsed+" -h  8 -f "+str(unitigCoverage)
+			cmd="btrim -u out.unitigs.fa -k "+str(kmerSize)+" -t "+str(2*int(kmerSize-1))+" -T 3 -c "+coreUsed+" -o dbg"+str(kmerSize)+".fa -h  8 -f "+str(unitigCoverage)
 			printCommand("\t\t\t"+cmd)
 			p = subprocessLauncher(cmd, logTipsToWrite, logTipsToWrite)
-			checkWrittenFiles(OUT_DIR + "/tipped_out.unitigs.fa")
+			#~ checkWrittenFiles(OUT_DIR + "/tipped_out.unitigs.fa")
 			#~ os.remove(OUT_DIR + "/out.unitigs.fa")
 			#~ cmd="rm out.*"
 			#~ printCommand("\t\t\t"+cmd)
 			#~ p = subprocessLauncher(cmd)
-			cmd="mv tipped_out.unitigs.fa dbg" + str(kmerSize) + ".fa"
-			printCommand("\t\t\t"+cmd)
-			p = subprocessLauncher(cmd)
+			#~ cmd="mv tipped_out.unitigs.fa dbg" + str(kmerSize) + ".fa"
+			#~ printCommand("\t\t\t"+cmd)
+			#~ p = subprocessLauncher(cmd)
 			for filename in glob.glob(OUT_DIR + "/out.*"):
 				os.remove(filename)
 			for filename in glob.glob(OUT_DIR + "/trashme*"):
@@ -155,10 +161,10 @@ def graphConstruction(BCOOL_MAIN, BCOOL_INSTDIR, OUT_DIR, fileBcalm, kmerSize, s
 			# Read Mapping
 			print("\t#Read mapping with BGREAT... ", flush=True)
 			# BGREAT
-			cmd=BCOOL_INSTDIR + "/bgreat -k " + str(kmerSize) + "  -u original_reads.fa -g dbg" + str(kmerSize) + ".fa -t " + coreUsed + " -a "+str(aSize)+" -m "+str(missmatchAllowed)+" -c -O -f read_corrected.fa -e "+str(mappingEffort)
+			cmd="bgreat -k " + str(kmerSize) + "  -u original_reads.fa -g dbg" + str(kmerSize) + ".fa -t " + coreUsed + " -a "+str(aSize)+" -o "+str(maximumOccurence)+" -i "+str(subsambleAnchor)+" -m "+str(missmatchAllowed)+" -c -O -f reads_corrected.fa -e "+str(mappingEffort)
 			printCommand("\t\t"+cmd)
 			p = subprocessLauncher(cmd, logBgreatToWrite, logBgreatToWrite)
-			checkWrittenFiles(OUT_DIR + "/read_corrected.fa")
+			checkWrittenFiles(OUT_DIR + "/reads_corrected.fa")
 
 		os.chdir(BCOOL_MAIN)
 
@@ -182,27 +188,35 @@ def main():
 	wholeT = time.time()
 	print("\n*** This is Bcool - de Bruin graph based corrector  ***\n")
 	BCOOL_MAIN = os.path.dirname(os.path.realpath(__file__))
-	BCOOL_INSTDIR =	 BCOOL_MAIN + "/bin"  # todo : change using getPlatform()
-	print("Binaries are in: " + BCOOL_INSTDIR)
 
 	# ========================================================================
 	#						 Manage command line arguments
 	# ========================================================================
-	parser = argparse.ArgumentParser(description='BCOOL - De Bruijn graph based read corrector ')
+	parser = argparse.ArgumentParser(description='BCOOL - De Bruijn graph based read corrector ',formatter_class=argparse.RawTextHelpFormatter)
 
 	# ------------------------------------------------------------------------
 	#							 Define allowed options
 	# ------------------------------------------------------------------------
-	parser.add_argument("-u", action="store", dest="single_readfiles",		type=str,					help="input fasta read files. Several read files must be concatenated.")
-	parser.add_argument('-s', action="store", dest="min_cov",				type=int,	default = 2,	help="an integer, k-mers present strictly less than this number of times in the dataset will be discarded (default 2)")
-	parser.add_argument('-S', action="store", dest="unitig_Coverage",				type=int,	default = 5,	help="unitig Coverage for  cleaning (default 5)")
-	parser.add_argument('-o', action="store", dest="out_dir",				type=str,	default=os.getcwd(),	help="path to store the results (default = current directory)")
-	parser.add_argument('-k', action="store", dest="kSize",					type=int,	default = 0,	help="an integer,  k-mer size (default AUTO)")
-	parser.add_argument('-a', action="store", dest="aSize",	type=int,	default = 41,	help="an integer, Size of the anchor to use (default 41)")
-	parser.add_argument('-t', action="store", dest="nb_cores",				type=int,	default = 0,	help="number of cores used (default max)")
-	parser.add_argument('-e', action="store", dest="mapping_Effort",				type=int,	default = 1000,	help="Anchors to test for mapping ")
-	parser.add_argument('-m', action="store", dest="missmatch_allowed",				type=int,	default = 10,	help="missmatch allowed in mapping (default 10)")
-	parser.add_argument('--version', action='version', version='%(prog)s 0.0.1')
+	parser.add_argument("-u", action="store", dest="single_readfiles",		type=str,					help="(MANDATORY) input fasta read files. Several read files must be concatenated\n")
+	parser.add_argument('-o', action="store", dest="out_dir",				type=str,	default=os.getcwd(),	help="Path to store the results (Default = current directory)")
+	parser.add_argument('-t', action="store", dest="nb_cores",				type=int,	default = 1,	help="Number of cores used (Default = 1)\n \n")
+
+	parser.add_argument('-k', action="store", dest="kSize",					type=int,	default = 0,	help="k-mer size (Default = AUTO)")
+	parser.add_argument('-s', action="store", dest="min_cov",				type=int,	default = 2,	help="k-mers present strictly less than this number of times in the dataset will be discarded (Default = 2)")
+
+	parser.add_argument('-S', action="store", dest="unitig_Coverage",				type=int,	default = 0,	help="Unitig Coverage for cleaning (Default = AUTO)\n ")
+
+	#~ parser.add_argument('-e', action="store", dest="mapping_Effort",				type=int,	default = 1000,	help="Anchors to test for mapping ")
+	parser.add_argument('-m', action="store", dest="missmatch_allowed",				type=int,	default = 10,	help="(ADVANCED) Maximum number of corrected bases (Default = 10)")
+
+
+	parser.add_argument('-i', action="store", dest="subsamble_anchor",				type=int,	default = 1,	help="(ADVANCED) index one out of i anchors to reduce memory consumption (Default = 1)")
+	parser.add_argument('-n', action="store", dest="maximum_occurence",				type=int,	default = 1,	help="(ADVANCED) Maximum occurence of an anchor (Default = 1), better correction for repetitive genome but slower\n")
+
+	parser.add_argument('-d', action="store", dest="DEBUG",				type=int,	default = 0,	help="(ADVANCED) Print command lines\n \n")
+
+
+	global debug_mode
 
 
 	# ------------------------------------------------------------------------
@@ -221,11 +235,14 @@ def main():
 	# ------------------------------------------------------------------------
 	kSize				= options.kSize
 	min_cov				= options.min_cov
-	aSize = options.aSize
+	aSize				= 31
 	nb_cores			= options.nb_cores
-	mappingEffort		= options.mapping_Effort
+	mappingEffort		= 1000
 	unitigCoverage		= options.unitig_Coverage
 	missmatchAllowed		= options.missmatch_allowed
+	maximumOccurence		= options.maximum_occurence
+	subsambleAnchor		= options.subsamble_anchor
+	debug_mode		= options.DEBUG
 
 	# ------------------------------------------------------------------------
 	#				Create output dir and log files
@@ -237,13 +254,13 @@ def main():
 		else:
 			printWarningMsg(OUT_DIR + " directory already exists, BCOOL will use it.")
 
+		outName = OUT_DIR.split("/")[-1]
+		OUT_DIR = os.path.dirname(os.path.realpath(OUT_DIR)) + "/" + outName
 		OUT_LOG_FILES = OUT_DIR + "/logs"
 		if not os.path.exists(OUT_LOG_FILES):
 			os.mkdir(OUT_LOG_FILES)
-		outName = OUT_DIR.split("/")[-1]
-		OUT_DIR = os.path.dirname(os.path.realpath(OUT_DIR)) + "/" + outName
 		parametersLog = open(OUT_DIR + "/ParametersUsed.txt", 'w');
-		parametersLog.write("kSize:%s	k-mer_solidity:%s	unitig_solidity:%s	aSize:%s	mapping_effort:%s	missmatch_allowed:%s\n " %(kSize, min_cov, unitigCoverage,aSize, mappingEffort,missmatchAllowed))
+		parametersLog.write("kSize:%s	k-mer_solidity:%s	unitig_solidity:%s	aSize:%s	mapping_effort:%s	missmatch_allowed:%s maximum_occurence:%s subsample_anchor:%s\n " %(kSize, min_cov, unitigCoverage,aSize, mappingEffort,missmatchAllowed,maximumOccurence,subsambleAnchor))
 		parametersLog.close()
 
 		print("Results will be stored in: ", OUT_DIR)
@@ -281,7 +298,7 @@ def main():
 		errorReadFile *= 1
 
 	if errorReadFile:
-		parser.print_usage()
+		parser.print_help()
 		dieToFatalError("Bcool requires at least a read file")
 
 	bloocooArg = ""
@@ -322,34 +339,31 @@ def main():
 	os.chdir(BCOOL_MAIN)
 
 	if(kSize==0):
-	#~ correctionReads(BCOOL_MAIN, BCOOL_INSTDIR, paired_readfiles, single_readfiles, toolsArgs, fileCase, nb_correction_steps, OUT_DIR, nb_cores, OUT_LOG_FILES)
-		#~ os.chdir(BCOOL_MAIN)
+		print("No kmer size selected, launching kmer spctrum analysis with Ntcard \n")
+		f = open(os.devnull,"w")
 		os.chdir(OUT_DIR)
 		commands=[
-		BCOOL_INSTDIR + "/ntcard -k 21 -p reads "+single_readfiles ,
-		BCOOL_INSTDIR + "/ntcard -k 31 -p reads "+single_readfiles ,
-		BCOOL_INSTDIR + "/ntcard -k 41 -p reads "+single_readfiles ,
-		BCOOL_INSTDIR + "/ntcard -k 51 -p reads "+single_readfiles ,
-		BCOOL_INSTDIR + "/ntcard -k 61 -p reads "+single_readfiles ,
-		BCOOL_INSTDIR + "/ntcard -k 71 -p reads "+single_readfiles ,
-		BCOOL_INSTDIR + "/ntcard -k 81 -p reads "+single_readfiles ,
-		BCOOL_INSTDIR + "/ntcard -k 91 -p reads "+single_readfiles ,
-		BCOOL_INSTDIR + "/ntcard -k 101 -p reads "+single_readfiles ,
-		BCOOL_INSTDIR + "/ntcard -k 111 -p reads "+single_readfiles ,
-		BCOOL_INSTDIR + "/ntcard -k 121 -p reads "+single_readfiles ,
-		BCOOL_INSTDIR + "/ntcard -k 131 -p reads "+single_readfiles ,
-		BCOOL_INSTDIR + "/ntcard -k 141 -p reads "+single_readfiles ,
-		BCOOL_INSTDIR + "/ntcard -k 151 -p reads "+single_readfiles
+		 "ntcard -k 21   "+single_readfiles ,
+		  "ntcard -k 31   "+single_readfiles ,
+		  "ntcard -k 41   "+single_readfiles ,
+		  "ntcard -k 51   "+single_readfiles ,
+		  "ntcard -k 61   "+single_readfiles ,
+		  "ntcard -k 71   "+single_readfiles ,
+		  "ntcard -k 81   "+single_readfiles ,
+		  "ntcard -k 91   "+single_readfiles ,
+		  "ntcard -k 101   "+single_readfiles ,
+		  "ntcard -k 111   "+single_readfiles ,
+		  "ntcard -k 121   "+single_readfiles ,
+		  "ntcard -k 131   "+single_readfiles ,
+		  "ntcard -k 141   "+single_readfiles ,
+		  "ntcard -k 151   "+single_readfiles
 		]
-		#~ cmd=BCOOL_INSTDIR + "/ntcard -k 21,31 -t "+str(nb_cores)+" -p reads "+single_readfiles
-		#~ printCommand("\t\t\t"+cmd)
-		#~ p = subprocessLauncher(cmd)
 
-		procs = [ Popen(i,shell=True) for i in commands ]
+		procs = [ Popen(i,shell=True,stdout=f,stderr=f) for i in commands ]
 		for p in procs:
 		   p.wait()
 
-		cmd=BCOOL_INSTDIR + "/badvisor reads "+str(unitigCoverage)
+		cmd="btrim badvisor freq 5 1.3"
 		printCommand("\t\t\t"+cmd)
 		kSize = int(subprocess.check_output(cmd, shell=True))
 		if kSize<21:
@@ -361,14 +375,14 @@ def main():
 		os.chdir(BCOOL_MAIN)
 
 
-	print(printTime("Kmer selected : k="+str(kSize), time.time() - t))
+	print(printTime("Kmer selected : k="+str(kSize)+" Spectrum analysis duration", time.time() - t))
 
 
 	# ------------------------------------------------------------------------
 	#						   Graph construction and cleaning
 	# ------------------------------------------------------------------------
 	t = time.time()
-	valuesGraph = graphConstruction(BCOOL_MAIN, BCOOL_INSTDIR, OUT_DIR, "bankBcalm.txt", kSize, min_cov, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed,aSize, OUT_LOG_FILES)
+	valuesGraph = graphConstruction(BCOOL_MAIN, OUT_DIR, "bankBcalm.txt", kSize, min_cov, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed,aSize,maximumOccurence,subsambleAnchor, OUT_LOG_FILES)
 	print(printTime("Correction took: ", time.time() - t))
 
 

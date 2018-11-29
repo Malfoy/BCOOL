@@ -1,0 +1,381 @@
+
+
+
+# ***************************************************************************
+#
+#							   Bcool:
+#				 Short reads corrector de Bruijn graph based
+#
+#
+#
+# ***************************************************************************
+
+# ############################################################################
+
+
+debug_mode=0
+
+
+
+
+def printCommand(cmd,pc=True):
+	if (pc and debug_mode!=0):
+		print(cmd,flush=True)
+
+# get the platform
+def getPlatform():
+	if sys.platform == "linux" or sys.platform == "linux2":
+		return "linux"
+	elif sys.platform == "darwin":
+		return "OSX"
+	else:
+		print("[ERROR] BCOOL is not compatible with Windows.")
+		sys.exit(1);
+
+
+# get the timestamp as string
+def getTimestamp():
+	return "[" + time.strftime("%H:%M:%S") + " " + time.strftime("%d/%m/%Y") + "] "
+
+
+
+# check if reads files are present
+def checkReadFiles(readfiles):
+	if readfiles is None:
+		return True
+	allFilesAreOK = True
+	#~ for file in readfiles:
+	if not os.path.isfile(readfiles):
+		print("[ERROR] File \""+file+"\" does not exist.")
+		allFilesAreOK = False
+	if not allFilesAreOK:
+		dieToFatalError("One or more read files do not exist.")
+
+
+# check if files written by BCOOL are present
+def checkWrittenFiles(files):
+	allFilesAreOK = True
+	if not os.path.isfile(files):
+		print("[ERROR] There was a problem writing \"" + files + "\".")
+		allFilesAreOK = False
+	if not allFilesAreOK:
+		dieToFatalError("One or more files could not be written.")
+
+
+
+# to return if an error makes the run impossible
+def dieToFatalError (msg):
+  print("[FATAL ERROR] " + msg)
+  print("Try `BCOOL --help` for more information")
+  sys.exit(1);
+
+
+# launch subprocess
+def subprocessLauncher(cmd, argstdout=None, argstderr=None,	 argstdin=None):
+	args = shlex.split(cmd)
+	p = subprocess.Popen(args, stdin = argstdin, stdout = argstdout, stderr = argstderr).communicate()
+	return p
+
+def printTime(msg, seconds):
+	m, s = divmod(seconds, 60)
+	h, m = divmod(m, 60)
+	return msg + " %d:%02d:%02d" % (h, m, s)
+
+
+def printWarningMsg(msg):
+	print("[Warning] " + msg)
+
+
+# ############################################################################
+#			   graph generation with BCALM + BTRIM + BGREAT
+# ############################################################################
+
+def graphConstruction(BCOOL_MAIN, BCOOL_INSTDIR, OUT_DIR, fileBcalm, kmerSize, solidity, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed,aSize,maximumOccurence,subsambleAnchor, OUT_LOG_FILES):
+	try:
+		inputBcalm=fileBcalm
+		print("\n" + getTimestamp() + "--> Building the graph...",flush=True)
+		os.chdir(OUT_LOG_FILES)
+		logBcalm = "logBcalm"
+		logBcalmToWrite = open(logBcalm, 'w')
+		logTips = "logTips"
+		logTipsToWrite = open(logTips, 'w')
+		logBgreat = "logBgreat"
+		logBgreatToWrite = open(logBgreat, 'w')
+		logK2000 = "logK2000"
+		logK2000ToWrite = open(logK2000, 'w')
+		#~ os.chdir(BCOOL_MAIN)
+		os.chdir(OUT_DIR)
+		indiceGraph = 1
+		coreUsed = "20" if nb_cores == 0 else str(nb_cores)
+
+		if(os.path.isfile(OUT_DIR +"/dbg" + str(kmerSize)+".fa")):
+			print("\t#Graph dbg" + str(kmerSize)+".fa: Already here ! Let us use it ", flush=True)
+		else:
+			print("\t#Graph  dbg" + str(kmerSize)+".fa: Construction... ", flush=True)
+			# BCALM
+			cmd=BCOOL_INSTDIR + "/bcalm -max-memory 10000 -in " + OUT_DIR + "/" + inputBcalm + " -kmer-size " + str(kmerSize) + " -abundance-min " + str(solidity) + " -out " + OUT_DIR + "/out " + " -nb-cores " + coreUsed
+
+			printCommand( "\t\t"+cmd)
+			p = subprocessLauncher(cmd, logBcalmToWrite, logBcalmToWrite)
+			checkWrittenFiles(OUT_DIR + "/out.unitigs.fa")
+
+			#  Graph Cleaning
+			print("\t\t #Graph cleaning... ", flush=True)
+			# BTRIM
+			cmd=BCOOL_INSTDIR + "/btrim -u out.unitigs.fa -k "+str(kmerSize)+" -t "+str(2*int(kmerSize-1))+" -T 3 -c "+coreUsed+" -o dbg"+str(kmerSize)+".fa -h  8 -f "+str(unitigCoverage)
+			printCommand("\t\t\t"+cmd)
+			p = subprocessLauncher(cmd, logTipsToWrite, logTipsToWrite)
+			#~ checkWrittenFiles(OUT_DIR + "/tipped_out.unitigs.fa")
+			#~ os.remove(OUT_DIR + "/out.unitigs.fa")
+			#~ cmd="rm out.*"
+			#~ printCommand("\t\t\t"+cmd)
+			#~ p = subprocessLauncher(cmd)
+			#~ cmd="mv tipped_out.unitigs.fa dbg" + str(kmerSize) + ".fa"
+			#~ printCommand("\t\t\t"+cmd)
+			#~ p = subprocessLauncher(cmd)
+			for filename in glob.glob(OUT_DIR + "/out.*"):
+				os.remove(filename)
+			for filename in glob.glob(OUT_DIR + "/trashme*"):
+				os.remove(filename)
+
+		if(os.path.isfile(OUT_DIR +"/dbg" + str(kmerSize)+".fa")):
+			# Read Mapping
+			print("\t#Read mapping with BGREAT... ", flush=True)
+			# BGREAT
+			cmd=BCOOL_INSTDIR + "/bgreat -k " + str(kmerSize) + "  -u original_reads.fa -g dbg" + str(kmerSize) + ".fa -t " + coreUsed + " -a "+str(aSize)+" -o "+str(maximumOccurence)+" -i "+str(subsambleAnchor)+" -m "+str(missmatchAllowed)+" -c -O -f reads_corrected.fa -e "+str(mappingEffort)
+			printCommand("\t\t"+cmd)
+			p = subprocessLauncher(cmd, logBgreatToWrite, logBgreatToWrite)
+			checkWrittenFiles(OUT_DIR + "/reads_corrected.fa")
+
+		os.chdir(BCOOL_MAIN)
+
+		print(getTimestamp() + "--> Done!")
+		return {'indiceGraph': indiceGraph, 'kmerSize': kmerSize}
+	except SystemExit:	# happens when checkWrittenFiles() returns an error
+		sys.exit(1);
+	except KeyboardInterrupt:
+		sys.exit(1);
+	except:
+		print("Unexpected error during graph construction:", sys.exc_info()[0])
+		dieToFatalError('')
+
+
+
+# ############################################################################
+#									Main
+# ############################################################################
+def main():
+
+	wholeT = time.time()
+	print("\n*** This is Bcool - de Bruin graph based corrector  ***\n")
+	BCOOL_MAIN = os.path.dirname(os.path.realpath(__file__))
+	print("Binaries are in: " + BCOOL_INSTDIR)
+
+	# ========================================================================
+	#						 Manage command line arguments
+	# ========================================================================
+	parser = argparse.ArgumentParser(description='BCOOL - De Bruijn graph based read corrector ',formatter_class=argparse.RawTextHelpFormatter)
+
+	# ------------------------------------------------------------------------
+	#							 Define allowed options
+	# ------------------------------------------------------------------------
+	parser.add_argument("-u", action="store", dest="single_readfiles",		type=str,					help="(MANDATORY) input fasta read files. Several read files must be concatenated\n")
+	parser.add_argument('-o', action="store", dest="out_dir",				type=str,	default=os.getcwd(),	help="Path to store the results (Default = current directory)")
+	parser.add_argument('-t', action="store", dest="nb_cores",				type=int,	default = 1,	help="Number of cores used (Default = 1)\n \n")
+
+	parser.add_argument('-k', action="store", dest="kSize",					type=int,	default = 0,	help="k-mer size (Default = AUTO)")
+	parser.add_argument('-s', action="store", dest="min_cov",				type=int,	default = 2,	help="k-mers present strictly less than this number of times in the dataset will be discarded (Default = 2)")
+
+	parser.add_argument('-S', action="store", dest="unitig_Coverage",				type=int,	default = 0,	help="Unitig Coverage for cleaning (Default = AUTO)\n ")
+
+	#~ parser.add_argument('-e', action="store", dest="mapping_Effort",				type=int,	default = 1000,	help="Anchors to test for mapping ")
+	parser.add_argument('-m', action="store", dest="missmatch_allowed",				type=int,	default = 10,	help="(ADVANCED) Maximum number of corrected bases (Default = 10)")
+
+
+	parser.add_argument('-i', action="store", dest="subsamble_anchor",				type=int,	default = 1,	help="(ADVANCED) index one out of i anchors to reduce memory consumption (Default = 1)")
+	parser.add_argument('-n', action="store", dest="maximum_occurence",				type=int,	default = 1,	help="(ADVANCED) Maximum occurence of an anchor (Default = 1), better correction for repetitive genome but slower\n")
+
+	parser.add_argument('-d', action="store", dest="DEBUG",				type=int,	default = 0,	help="(ADVANCED) Print command lines\n \n")
+
+
+	global debug_mode
+
+
+	# ------------------------------------------------------------------------
+	#				Parse and interpret command line arguments
+	# ------------------------------------------------------------------------
+	options = parser.parse_args()
+
+	# ------------------------------------------------------------------------
+	#				  Print command line
+	# ------------------------------------------------------------------------
+	print("The command line was: " + ' '.join(sys.argv))
+
+
+	# ------------------------------------------------------------------------
+	#				  Misc parameters
+	# ------------------------------------------------------------------------
+	kSize				= options.kSize
+	min_cov				= options.min_cov
+	aSize				= 31
+	nb_cores			= options.nb_cores
+	mappingEffort		= 1000
+	unitigCoverage		= options.unitig_Coverage
+	missmatchAllowed		= options.missmatch_allowed
+	maximumOccurence		= options.maximum_occurence
+	subsambleAnchor		= options.subsamble_anchor
+	debug_mode		= options.DEBUG
+
+	# ------------------------------------------------------------------------
+	#				Create output dir and log files
+	# ------------------------------------------------------------------------
+	OUT_DIR = options.out_dir
+	try:
+		if not os.path.exists(OUT_DIR):
+			os.mkdir(OUT_DIR)
+		else:
+			printWarningMsg(OUT_DIR + " directory already exists, BCOOL will use it.")
+
+		outName = OUT_DIR.split("/")[-1]
+		OUT_DIR = os.path.dirname(os.path.realpath(OUT_DIR)) + "/" + outName
+		OUT_LOG_FILES = OUT_DIR + "/logs"
+		if not os.path.exists(OUT_LOG_FILES):
+			os.mkdir(OUT_LOG_FILES)
+		parametersLog = open(OUT_DIR + "/ParametersUsed.txt", 'w');
+		parametersLog.write("kSize:%s	k-mer_solidity:%s	unitig_solidity:%s	aSize:%s	mapping_effort:%s	missmatch_allowed:%s maximum_occurence:%s subsample_anchor:%s\n " %(kSize, min_cov, unitigCoverage,aSize, mappingEffort,missmatchAllowed,maximumOccurence,subsambleAnchor))
+		parametersLog.close()
+
+		print("Results will be stored in: ", OUT_DIR)
+	except:
+		print("Could not write in out directory :", sys.exc_info()[0])
+		dieToFatalError('')
+
+	# ------------------------------------------------------------------------
+	#				  Parse input read options
+	# ------------------------------------------------------------------------
+	try:
+		bankBcalm = open(OUT_DIR + "/bankBcalm.txt", 'w');
+	except:
+		print("Could not write in out directory :", sys.exc_info()[0])
+
+	# check if the given paired-end read files indeed exist
+	paired_readfiles = None
+	single_readfiles = None
+	errorReadFile = 0
+	paired_readfiles = None
+	errorReadFile = 1
+
+	# check if the given single-end read files indeed exist
+	if options.single_readfiles:
+		single_readfiles = ''.join(options.single_readfiles)
+		try:
+			single_readfiles = os.path.abspath(single_readfiles)
+			checkReadFiles(options.single_readfiles)
+			errorReadFile *= 0
+		except:
+			single_readfiles = None
+			errorReadFile *= 1
+	else:
+		single_readfiles = None
+		errorReadFile *= 1
+
+	if errorReadFile:
+		parser.print_help()
+		dieToFatalError("Bcool requires at least a read file")
+
+	bloocooArg = ""
+	bgreatArg = ""
+	paired = '' if paired_readfiles is None else str(paired_readfiles)
+	single = '' if single_readfiles is None else str(single_readfiles)
+	both = paired + "," + single
+	toolsArgs = {'bloocoo':{1: paired + " " , 2:  single + " " , 3: both + " "}, 'bgreat':{1:" -x original_reads.fa ", 2: " -u original_reads.fa ", 3: " -x reads_corrected1.fa  -u reads_corrected2.fa "}}
+
+
+
+
+	if single_readfiles is not None and paired_readfiles is not None:  # paired end + single end
+		fileCase = 3
+		bankBcalm.write(OUT_DIR + "/reads_corrected1.fa\n" + OUT_DIR + "/reads_corrected2.fa\n")
+	elif single_readfiles is None:	# paired end only
+		fileCase = 1
+		bankBcalm.write(OUT_DIR + "/original_reads.fa\n")
+	else:  # single end only
+		fileCase = 2
+		bankBcalm.write(OUT_DIR + "/original_reads.fa\n")
+	# bankBcalm.write(OUT_DIR + "lost_unitig.fa")
+	bankBcalm.close()
+
+	# ========================================================================
+	#									RUN
+	# ========================================================================
+
+
+	# ------------------------------------------------------------------------
+	#						   Kmer size selection
+	# ------------------------------------------------------------------------
+	t = time.time()
+	os.chdir(OUT_DIR)
+	cmd="ln -fs " + single_readfiles + " " + OUT_DIR + "/original_reads.fa"
+	printCommand("\t\t\t"+cmd)
+	p = subprocessLauncher(cmd)
+	os.chdir(BCOOL_MAIN)
+
+	if(kSize==0):
+		print("No kmer size selected, launching kmer spctrum analysis with Ntcard \n")
+	#~ correctionReads(BCOOL_MAIN, BCOOL_INSTDIR, paired_readfiles, single_readfiles, toolsArgs, fileCase, nb_correction_steps, OUT_DIR, nb_cores, OUT_LOG_FILES)
+		#~ os.chdir(BCOOL_MAIN)
+		f = open(os.devnull,"w")
+		os.chdir(OUT_DIR)
+		commands=[
+		BCOOL_INSTDIR + "/ntcard -k 21 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 31 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 41 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 51 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 61 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 71 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 81 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 91 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 101 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 111 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 121 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 131 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 141 -p reads "+single_readfiles ,
+		BCOOL_INSTDIR + "/ntcard -k 151 -p reads "+single_readfiles
+		]
+		#~ cmd=BCOOL_INSTDIR + "/ntcard -k 21,31 -t "+str(nb_cores)+" -p reads "+single_readfiles
+		#~ printCommand("\t\t\t"+cmd)
+		#~ p = subprocessLauncher(cmd)
+
+		procs = [ Popen(i,shell=True,stdout=f,stderr=f) for i in commands ]
+		for p in procs:
+		   p.wait()
+
+		cmd=BCOOL_INSTDIR + "/btrim badvisor reads "+str(5)+" 1.3"
+		printCommand("\t\t\t"+cmd)
+		kSize = int(subprocess.check_output(cmd, shell=True))
+		if kSize<21:
+			print("\nWARNING : I could not determine a good kmer size sorry :( \n")
+			print("I try with k=21 anyway...\n")
+			kSize=21
+		for filename in glob.glob(OUT_DIR + "/*.hist"):
+			os.remove(filename)
+		os.chdir(BCOOL_MAIN)
+
+
+	print(printTime("Kmer selected : k="+str(kSize)+" Spectrum analysis duration", time.time() - t))
+
+
+	# ------------------------------------------------------------------------
+	#						   Graph construction and cleaning
+	# ------------------------------------------------------------------------
+	t = time.time()
+	valuesGraph = graphConstruction(BCOOL_MAIN, BCOOL_INSTDIR, OUT_DIR, "bankBcalm.txt", kSize, min_cov, toolsArgs, nb_cores, mappingEffort, unitigCoverage, missmatchAllowed,aSize,maximumOccurence,subsambleAnchor, OUT_LOG_FILES)
+	print(printTime("Correction took: ", time.time() - t))
+
+
+
+
+
+
+if __name__ == '__main__':
+	main()

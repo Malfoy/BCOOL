@@ -1,3 +1,26 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import os
+import re
+import sys
+import time
+import shlex, subprocess
+import struct
+import shutil
+import os.path
+import tempfile
+import argparse
+import threading
+import multiprocessing
+import glob
+# from random import randint
+from operator import itemgetter
+from subprocess import Popen, PIPE, STDOUT
+
+
+
+#The Absolute path where your binaries are
+BCOOL_INSTDIR = ("/home/malfoy/dev/BCOOL/bin")
 
 
 
@@ -13,11 +36,13 @@
 # ############################################################################
 
 
+debug_mode=0
+
 
 
 
 def printCommand(cmd,pc=True):
-	if pc:
+	if (pc and debug_mode!=0):
 		print(cmd,flush=True)
 
 # get the platform
@@ -172,30 +197,31 @@ def main():
 	# ========================================================================
 	#						 Manage command line arguments
 	# ========================================================================
-	parser = argparse.ArgumentParser(description='BCOOL - De Bruijn graph based read corrector ')
+	parser = argparse.ArgumentParser(description='BCOOL - De Bruijn graph based read corrector ',formatter_class=argparse.RawTextHelpFormatter)
 
 	# ------------------------------------------------------------------------
 	#							 Define allowed options
 	# ------------------------------------------------------------------------
-	parser.add_argument("-u", action="store", dest="single_readfiles",		type=str,					help="input fasta read files. Several read files must be concatenated\n")
+	parser.add_argument("-u", action="store", dest="single_readfiles",		type=str,					help="(MANDATORY) input fasta read files. Several read files must be concatenated\n")
+	parser.add_argument('-o', action="store", dest="out_dir",				type=str,	default=os.getcwd(),	help="Path to store the results (Default = current directory)")
+	parser.add_argument('-t', action="store", dest="nb_cores",				type=int,	default = 1,	help="Number of cores used (Default = 1)\n \n")
 
-	parser.add_argument('-k', action="store", dest="kSize",					type=int,	default = 0,	help="an integer,  k-mer size (default AUTO)")
-	parser.add_argument('-s', action="store", dest="min_cov",				type=int,	default = 2,	help="an integer, k-mers present strictly less than this number of times in the dataset will be discarded (default 2)")
-	parser.add_argument('-S', action="store", dest="unitig_Coverage",				type=int,	default = 0,	help="unitig Coverage for  cleaning (default auto)\n")
+	parser.add_argument('-k', action="store", dest="kSize",					type=int,	default = 0,	help="k-mer size (Default = AUTO)")
+	parser.add_argument('-s', action="store", dest="min_cov",				type=int,	default = 2,	help="k-mers present strictly less than this number of times in the dataset will be discarded (Default = 2)")
 
-	parser.add_argument('-a', action="store", dest="aSize",	type=int,	default = 41,	help="an integer, Size of the anchor to use (default 41)")
-	parser.add_argument('-i', action="store", dest="subsamble_anchor",				type=int,	default = 1,	help="index one out of i anchors (default 1)")
-	parser.add_argument('-n', action="store", dest="maximum_occurence",				type=int,	default = 8,	help="maximum occurence of an anchor (default 8)\n")
-	parser.add_argument('-e', action="store", dest="mapping_Effort",				type=int,	default = 1000,	help="Anchors to test for mapping ")
-	parser.add_argument('-m', action="store", dest="missmatch_allowed",				type=int,	default = 10,	help="missmatch allowed in mapping (default 10)")
+	parser.add_argument('-S', action="store", dest="unitig_Coverage",				type=int,	default = 0,	help="Unitig Coverage for cleaning (Default = AUTO)\n ")
 
-
+	#~ parser.add_argument('-e', action="store", dest="mapping_Effort",				type=int,	default = 1000,	help="Anchors to test for mapping ")
+	parser.add_argument('-m', action="store", dest="missmatch_allowed",				type=int,	default = 10,	help="(ADVANCED) Maximum number of corrected bases (Default = 10)")
 
 
-	parser.add_argument('-o', action="store", dest="out_dir",				type=str,	default=os.getcwd(),	help="path to store the results (default = current directory)")
-	parser.add_argument('-t', action="store", dest="nb_cores",				type=int,	default = 0,	help="number of cores used (default max)")
+	parser.add_argument('-i', action="store", dest="subsamble_anchor",				type=int,	default = 1,	help="(ADVANCED) index one out of i anchors to reduce memory consumption (Default = 1)")
+	parser.add_argument('-n', action="store", dest="maximum_occurence",				type=int,	default = 1,	help="(ADVANCED) Maximum occurence of an anchor (Default = 1), better correction for repetitive genome but slower\n")
 
-	parser.add_argument('--version', action='version', version='%(prog)s 0.0.1')
+	parser.add_argument('-d', action="store", dest="DEBUG",				type=int,	default = 0,	help="(ADVANCED) Print command lines\n \n")
+
+
+	global debug_mode
 
 
 	# ------------------------------------------------------------------------
@@ -214,13 +240,14 @@ def main():
 	# ------------------------------------------------------------------------
 	kSize				= options.kSize
 	min_cov				= options.min_cov
-	aSize				= options.aSize
+	aSize				= 31
 	nb_cores			= options.nb_cores
-	mappingEffort		= options.mapping_Effort
+	mappingEffort		= 1000
 	unitigCoverage		= options.unitig_Coverage
 	missmatchAllowed		= options.missmatch_allowed
 	maximumOccurence		= options.maximum_occurence
 	subsambleAnchor		= options.subsamble_anchor
+	debug_mode		= options.DEBUG
 
 	# ------------------------------------------------------------------------
 	#				Create output dir and log files
@@ -276,7 +303,7 @@ def main():
 		errorReadFile *= 1
 
 	if errorReadFile:
-		parser.print_usage()
+		parser.print_help()
 		dieToFatalError("Bcool requires at least a read file")
 
 	bloocooArg = ""
@@ -320,6 +347,7 @@ def main():
 		print("No kmer size selected, launching kmer spctrum analysis with Ntcard \n")
 	#~ correctionReads(BCOOL_MAIN, BCOOL_INSTDIR, paired_readfiles, single_readfiles, toolsArgs, fileCase, nb_correction_steps, OUT_DIR, nb_cores, OUT_LOG_FILES)
 		#~ os.chdir(BCOOL_MAIN)
+		f = open(os.devnull,"w")
 		os.chdir(OUT_DIR)
 		commands=[
 		BCOOL_INSTDIR + "/ntcard -k 21 -p reads "+single_readfiles ,
@@ -341,11 +369,11 @@ def main():
 		#~ printCommand("\t\t\t"+cmd)
 		#~ p = subprocessLauncher(cmd)
 
-		procs = [ Popen(i,shell=True) for i in commands ]
+		procs = [ Popen(i,shell=True,stdout=f,stderr=f) for i in commands ]
 		for p in procs:
 		   p.wait()
 
-		cmd=BCOOL_INSTDIR + "/badvisor reads "+str(5)+" 1.3"
+		cmd=BCOOL_INSTDIR + "/btrim badvisor reads "+str(5)+" 1.3"
 		printCommand("\t\t\t"+cmd)
 		kSize = int(subprocess.check_output(cmd, shell=True))
 		if kSize<21:
@@ -357,7 +385,7 @@ def main():
 		os.chdir(BCOOL_MAIN)
 
 
-	print(printTime("Kmer selected : k="+str(kSize), time.time() - t))
+	print(printTime("Kmer selected : k="+str(kSize)+" Spectrum analysis duration", time.time() - t))
 
 
 	# ------------------------------------------------------------------------
