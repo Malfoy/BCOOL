@@ -96,6 +96,7 @@ cd ..;
 echo PHASE THREE, READ MAPPING ON THE DBG: BGREAT;
 
 
+
 git clone https://github.com/Malfoy/BTRIM >>logCompile 2>>logCompile;
 cd BTRIM;
 make -j $threadNumber >>logCompile 2>>logCompile;
@@ -105,7 +106,6 @@ if [ $? -ne 0 ]
               exit 1
        fi
 cp btrim $folder;
-cp badvisor $folder;
 cd ..;
 echo PHASE FOUR GRAPH CLEANING: BTRIM;
 cd ..;
