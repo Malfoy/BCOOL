@@ -23,7 +23,7 @@ else
 fi
 printf "\n\n\n"
 
-../Bcool  -u lambda_virus.200bp.50x.1percentError.fa  -o testNtcard -t $CORES
+../Bcool  -u lambda_virus.200bp.50x.1percentError.fa.gz  -o testNtcard -t $CORES
 
 printf "\n\n\n"
 
