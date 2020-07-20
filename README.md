@@ -7,10 +7,10 @@
 # BCOOL
 de Bruijn graph cOrrectiOn from graph aLignment
 
-## Dependancies
-Bcool clone and compile Bcalm2 Bgreat2 Btrim and Ntcard
+## Dependencies
+The installation script of Bcool compiles Bcalm2, Bgreat2, Btrim and ntCard.
 
-It require GCC>=4.9.1, CMAKE>=3.3 and Python 3
+This requires GCC>=4.9.1, CMAKE>=3.10, Autoconf, Automake and Python 3.
 
 ## Installation
 
@@ -28,7 +28,7 @@ For a faster install using 8 cores
 
 `./test.sh`
 
-Bcool will be tested with a fixed kmer size and with ntcard
+Bcool will be tested with a fixed kmer size and with ntCard
 
 It should output
 
@@ -38,7 +38,7 @@ and
 
 `IT WORKS with ntcard!`
 
-If only the first message is present, you can still use Bcool but you need to give a size of k to perform correction
+If only the first message is present, you can still use Bcool but you need to give a size of k to perform correction.
 
 
 
