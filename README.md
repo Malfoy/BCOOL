@@ -7,8 +7,11 @@
 # BCOOL
 de Bruijn graph cOrrectiOn from graph aLignment
 
+[Limasset A, Flot J-F, Peterlongo P (2020) Toward perfect reads: self-correction of short reads via mapping on de Bruijn graphs. Bioinformatics 36:1374–1381](https://doi.org/10.1093/bioinformatics/btz102) 
+
+
 ## Dependencies
-The installation script of Bcool compiles Bcalm2, Bgreat2, Btrim and ntCard.
+The installation script of Bcool compiles [Bcalm2](https://github.com/GATB/bcalm), [Bgreat2](https://github.com/Malfoy/BGREAT2), [Btrim](https://github.com/Malfoy/BTRIM) and [ntCard](https://github.com/bcgsc/ntCard).
 
 This requires GCC>=4.9.1, CMAKE>=3.10, Autoconf, Automake and Python 3.
 
