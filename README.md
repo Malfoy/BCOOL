@@ -4,13 +4,16 @@
 [![Build Status](https://travis-ci.org/Malfoy/BWISE.svg?branch=master)](https://travis-ci.org/Malfoy/BCOOL)
 
 
-# BCOOL
+# Bcool
 de Bruijn graph cOrrectiOn from graph aLignment
 
-## Dependancies
-Bcool clone and compile Bcalm2 Bgreat2 Btrim and Ntcard
+[Limasset A, Flot J-F, Peterlongo P (2020) Toward perfect reads: self-correction of short reads via mapping on de Bruijn graphs. Bioinformatics 36:1374–1381](https://doi.org/10.1093/bioinformatics/btz102) 
 
-It require GCC>=4.9.1, CMAKE>=3.3 and Python 3
+
+## Dependencies
+The installation script of Bcool compiles [Bcalm2](https://github.com/GATB/bcalm), [Bgreat2](https://github.com/Malfoy/BGREAT2), [Btrim](https://github.com/Malfoy/BTRIM) and [ntCard](https://github.com/bcgsc/ntCard).
+
+This requires GCC>=4.9.1, CMAKE>=3.10, Autoconf, Automake and Python 3.
 
 ## Installation
 
@@ -28,7 +31,7 @@ For a faster install using 8 cores
 
 `./test.sh`
 
-Bcool will be tested with a fixed kmer size and with ntcard
+Bcool will be tested with a fixed kmer size and with ntCard
 
 It should output
 
@@ -38,7 +41,7 @@ and
 
 `IT WORKS with ntcard!`
 
-If only the first message is present, you can still use Bcool but you need to give a size of k to perform correction
+If only the first message is present, you can still use Bcool but you need to give a size of k to perform correction.
 
 
 
