@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/Malfoy/BWISE.svg?branch=master)](https://travis-ci.org/Malfoy/BCOOL)
 
 
-# BCOOL
+# Bcool
 de Bruijn graph cOrrectiOn from graph aLignment
 
 [Limasset A, Flot J-F, Peterlongo P (2020) Toward perfect reads: self-correction of short reads via mapping on de Bruijn graphs. Bioinformatics 36:1374–1381](https://doi.org/10.1093/bioinformatics/btz102) 
